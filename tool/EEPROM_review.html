@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CNT AI Reviewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+  <style>
+    :root {
+      --bg: #212121; --card: #2a2a2a; --border: #3a3a3a;
+      --accent: #10a37f; --accent2: #0d8a6c;
+      --text: #ececec; --muted: #8e8ea0;
+      --match: #22c55e; --diff: #f59e0b;
+      --only-a: #3b82f6; --only-b: #a855f7;
+      --danger: #ef4444; --row-hover: #333333;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+
+    /* ── Header ── */
+    header {
+      background: #1a1a1a;
+      border-bottom: 1px solid var(--border);
+      padding: 11px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    }
+    header .logo {
+      width: 36px; height: 36px;
+      background: #1f2e2a; border: 1px solid var(--accent);
+      border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; font-size: 16px; color: var(--accent); flex-shrink: 0;
+    }
+    header h1 { font-size: 15px; font-weight: 700; }
+    header .subtitle { font-size: 12px; color: var(--muted); }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .model-select-wrap { display: flex; align-items: center; gap: 8px; }
+    .model-select-wrap label { font-size: 12px; color: var(--muted); }
+    select#model-select {
+      background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-size: 13px; font-family: var(--font); padding: 6px 10px; cursor: pointer;
+    }
+    select#model-select:focus { outline: none; border-color: var(--accent); }
+    select#model-select option { background: #1a1a1a; }
+    .btn-settings {
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-size: 13px; padding: 7px 14px; cursor: pointer;
+      transition: all .15s; white-space: nowrap;
+    }
+    .btn-settings:hover { color: var(--text); border-color: var(--accent); }
+    .btn-settings.configured { border-color: var(--match); color: var(--match); }
+    .btn-home {
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--muted); font-size: 13px; padding: 7px 14px; cursor: pointer;
+      transition: all .15s; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-home:hover { color: var(--text); border-color: var(--accent); }
+
+    /* ── Settings Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65);
+      z-index: 10000; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 28px 32px; width: 560px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,.8);
+    }
+    .modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .modal .modal-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 22px; line-height: 1.5; }
+    .modal-field { margin-bottom: 16px; }
+    .modal-field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; color: var(--muted); margin-bottom: 6px; }
+    .modal-field input, .modal-field select {
+      width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-size: 13px; font-family: var(--font); padding: 9px 14px; outline: none;
+    }
+    .modal-field input:focus, .modal-field select:focus { border-color: var(--accent); }
+    .modal-field input::placeholder { color: var(--muted); font-family: 'Segoe UI', sans-serif; }
+    .modal-field .hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+    .modal-btn { padding: 9px 22px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .modal-btn-save { background: var(--accent); color: #fff; }
+    .modal-btn-cancel { background: #1a1a1a; color: var(--muted); border: 1px solid var(--border); }
+    .modal-btn-cancel:hover { color: var(--text); }
+    .settings-status {
+      display: none; background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3);
+      border-radius: 8px; padding: 8px 14px; font-size: 12px; color: var(--match); margin-bottom: 16px;
+    }
+    .settings-status.visible { display: block; }
+    .settings-warning {
+      display: none; background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3);
+      border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--diff); margin-bottom: 16px; line-height: 1.5;
+    }
+    .settings-warning.visible { display: block; }
+
+    /* ── Layout ── */
+    main { padding: 28px 40px; max-width: 1600px; margin: 0 auto; }
+
+    /* ── Upload cards ── */
+    .upload-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px; }
+    .upload-card {
+      background: var(--card); border: 2px dashed var(--border); border-radius: 14px;
+      padding: 28px 24px; text-align: center; cursor: pointer;
+      transition: border-color .2s, background .2s; position: relative;
+    }
+    .upload-card:hover, .upload-card.drag-over { border-color: var(--accent); background: #333333; }
+    .upload-card.loaded { border-style: solid; }
+    .upload-card input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-card .icon { font-size: 36px; margin-bottom: 10px; }
+    .upload-card .label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 6px; }
+    .upload-card .filename { font-size: 14px; font-weight: 600; color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .upload-card .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .upload-card .badge { display: inline-block; margin-top: 8px; background: #1e3a2f; color: var(--match); border: 1px solid #2d5c48; border-radius: 20px; padding: 2px 12px; font-size: 12px; font-weight: 600; }
+    .file-a .label { color: #60a5fa; } .file-b .label { color: #c084fc; }
+    .file-a.loaded { border-color: #60a5fa; } .file-b.loaded { border-color: #c084fc; }
+
+    /* ── Config area ── */
+    .config-area {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .config-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 4px; }
+    textarea#criteria {
+      width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-size: 13px; padding: 10px 14px; resize: vertical; min-height: 76px; font-family: inherit;
+    }
+    textarea#criteria:focus { outline: none; border-color: var(--accent); }
+    textarea#criteria::placeholder { color: var(--muted); }
+
+    /* ── Action bar ── */
+    .action-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .btn { padding: 10px 24px; border-radius: 8px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity .15s, transform .1s; }
+    .btn:active { transform: scale(.97); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; min-width: 210px; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent2); }
+    .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-export { background: #14532d; color: #4ade80; border: 1px solid #166534; margin-left: auto; }
+    .btn-ai { background: linear-gradient(135deg, #6c63ff, #a855f7); color: #fff; min-width: 180px; }
+    .btn-ai:disabled { opacity: .4; cursor: not-allowed; }
+    #loading { display: none; font-size: 13px; color: var(--muted); }
+
+    /* ── No-config banner ── */
+    .no-config-banner {
+      display: none; background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.35);
+      border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--diff);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+    }
+    .no-config-banner.hidden { display: none !important; }
+    .no-config-banner button { background: rgba(245,158,11,.2); border: 1px solid rgba(245,158,11,.4);
+      border-radius: 6px; color: var(--diff); font-size: 12px; font-weight: 600; padding: 4px 12px;
+      cursor: pointer; }
+
+    /* ── AI Error ── */
+    .ai-error {
+      display: none; background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.4);
+      border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--danger); margin-bottom: 16px;
+    }
+    .ai-error.visible { display: block; }
+
+    /* ── AI Report Panel ── */
+    #ai-panel { display: none; margin-bottom: 24px; }
+    .ai-spinner {
+      display: none; background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 28px; text-align: center; color: var(--muted); font-size: 14px;
+    }
+    .ai-spinner.visible { display: block; }
+    @keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+    .spinner-icon { font-size: 28px; display: inline-block; animation: pulse 1.4s infinite; margin-bottom: 10px; }
+    .ai-report-card { display: none; background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .ai-report-card.visible { display: block; }
+
+    /* Verdict banner */
+    .ai-verdict-banner {
+      padding: 14px 20px; display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--border); flex-wrap: wrap;
+    }
+    .ai-verdict-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+    .verdict-badge { border-radius: 20px; padding: 4px 16px; font-size: 13px; font-weight: 700; }
+    .v-approved   { background: #0d2a1a; color: var(--match);  border: 1px solid #166534; }
+    .v-conditions { background: #2a1f0d; color: var(--diff);   border: 1px solid #92400e; }
+    .v-rejected   { background: #2a0d0d; color: var(--danger); border: 1px solid #7f1d1d; }
+    .v-reviewed   { background: #1a2e27; color: var(--accent); border: 1px solid var(--accent2); }
+    .risk-badge { border-radius: 20px; padding: 3px 12px; font-size: 12px; font-weight: 600; }
+    .r-low    { background: #0d2a1a; color: var(--match);  border: 1px solid #166534; }
+    .r-medium { background: #2a1f0d; color: var(--diff);   border: 1px solid #92400e; }
+    .r-high   { background: #2a0d0d; color: var(--danger); border: 1px solid #7f1d1d; }
+    .ai-model-tag { margin-left: auto; font-size: 11px; color: var(--muted); font-family: monospace; background: #1a1a1a; border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; }
+    .btn-copy-md { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); font-size: 12px; padding: 4px 12px; cursor: pointer; transition: all .15s; }
+    .btn-copy-md:hover { color: var(--text); border-color: var(--muted); }
+
+    /* Summary snippet */
+    .ai-summary-text { padding: 14px 22px; font-size: 13px; line-height: 1.7; color: var(--text); border-bottom: 1px solid var(--border); }
+
+    /* Toggle full report */
+    .report-toggle { padding: 10px 22px; display: flex; align-items: center; gap: 8px; cursor: pointer; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--muted); user-select: none; transition: background .15s; }
+    .report-toggle:hover { background: var(--row-hover); }
+    .report-toggle .chevron { transition: transform .2s; display: inline-block; }
+    .report-toggle.open .chevron { transform: rotate(180deg); }
+    .ai-full-report { display: none; padding: 20px 28px; }
+    .ai-full-report.open { display: block; }
+
+    /* Markdown styles */
+    .md-body { font-size: 13.5px; line-height: 1.75; color: var(--text); }
+    .md-body h2 { font-size: 15px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin: 22px 0 10px; color: var(--accent); }
+    .md-body h3 { font-size: 14px; font-weight: 600; margin: 16px 0 8px; color: var(--text); }
+    .md-body table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 10px 0; }
+    .md-body th { background: #1a1a1a; border: 1px solid var(--border); padding: 7px 12px; text-align: left; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; }
+    .md-body td { border: 1px solid var(--border); padding: 7px 12px; }
+    .md-body tr:hover td { background: var(--row-hover); }
+    .md-body code { background: rgba(255,255,255,.07); border-radius: 4px; padding: 1px 5px; font-size: 12px; font-family: 'Consolas', monospace; }
+    .md-body pre { background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px; padding: 14px; overflow-x: auto; }
+    .md-body pre code { background: none; padding: 0; }
+    .md-body ul, .md-body ol { padding-left: 20px; margin: 8px 0; }
+    .md-body li { margin-bottom: 4px; }
+    .md-body strong { color: var(--text); }
+    .md-body blockquote { border-left: 3px solid var(--accent); margin-left: 0; padding-left: 14px; color: var(--muted); }
+
+    /* ── Compare summary ── */
+    .summary { display: none; }
+    .summary-cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+    .stat-card .val { font-size: 28px; font-weight: 800; line-height: 1; }
+    .stat-card .key { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .06em; }
+    .stat-total .val { color: var(--text); } .stat-match .val { color: var(--match); }
+    .stat-diff  .val { color: var(--diff); } .stat-only-a .val { color: var(--only-a); } .stat-only-b .val { color: var(--only-b); }
+
+    /* ── Filter bar ── */
+    .filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .filter-bar input[type=text] { flex: 1; min-width: 220px; padding: 8px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; outline: none; }
+    .filter-bar input[type=text]:focus { border-color: var(--accent); }
+    .filter-btn { padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .filter-btn.active { background: #333333; color: var(--text); border-color: var(--accent); }
+    .filter-btn.f-match.active  { background: #0d2a1a; color: var(--match);  border-color: var(--match); }
+    .filter-btn.f-diff.active   { background: #2a1f0d; color: var(--diff);   border-color: var(--diff); }
+    .filter-btn.f-only-a.active { background: #0d1f3a; color: var(--only-a); border-color: var(--only-a); }
+    .filter-btn.f-only-b.active { background: #1e0d3a; color: var(--only-b); border-color: var(--only-b); }
+
+    /* ── Table ── */
+    .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .table-scroll { overflow-x: auto; max-height: 60vh; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { background: #1a1a1a; padding: 11px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); white-space: nowrap; position: sticky; top: 0; z-index: 2; border-bottom: 1px solid var(--border); }
+    thead th.a-col { color: #60a5fa; } thead th.b-col { color: #c084fc; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    tbody tr:hover { background: var(--row-hover); }
+    tbody td { padding: 9px 14px; vertical-align: middle; }
+    .col-name { font-weight: 600; font-family: 'Consolas', monospace; font-size: 12px; }
+    .col-comp { font-size: 12px; color: #a5b4fc; white-space: nowrap; }
+    .col-sessions { font-size: 11px; color: #67e8f9; max-width: 200px; }
+    .col-org { font-family: monospace; font-size: 11px; color: #fbbf24; white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; cursor: help; }
+    .col-ident { font-family: monospace; color: var(--muted); }
+    .col-len { font-family: monospace; }
+    .badge-status { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .s-match  { background: #0d2a1a; color: var(--match);  border: 1px solid #166534; }
+    .s-diff   { background: #2a1f0d; color: var(--diff);   border: 1px solid #92400e; }
+    .s-only-a { background: #0d1f3a; color: var(--only-a); border: 1px solid #1e40af; }
+    .s-only-b { background: #1e0d3a; color: var(--only-b); border: 1px solid #7e22ce; }
+    .s-diff-detail { font-size: 10px; color: var(--diff); margin-top: 3px; }
+    .missing { color: #555; font-style: italic; }
+    .changed { color: var(--diff); font-weight: 700; }
+    .highlight { background: rgba(245,158,11,.12); }
+    .row-count { font-size: 12px; color: var(--muted); padding: 8px 14px; border-top: 1px solid var(--border); }
+    #empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    #empty-state .big { font-size: 48px; margin-bottom: 12px; }
+    #empty-state p { font-size: 14px; }
+
+    /* ── Column filter dropdown ── */
+    .col-filter-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0 3px; border-radius: 3px; margin-left: 3px; line-height: 1; vertical-align: middle; transition: color .15s, background .15s; }
+    .col-filter-btn:hover { color: var(--accent); background: rgba(16,163,127,.12); }
+    .col-filter-btn.active { color: var(--accent); font-weight: 900; }
+    #col-filter-dropdown { position: fixed; z-index: 9999; display: none; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px; min-width: 220px; max-width: 320px; box-shadow: 0 8px 32px rgba(0,0,0,.65); }
+    .cfd-search { width: 100%; padding: 6px 10px; background: #1a1a1a; border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; outline: none; margin-bottom: 6px; box-sizing: border-box; }
+    .cfd-search:focus { border-color: var(--accent); }
+    .cfd-list { max-height: 220px; overflow-y: auto; margin-bottom: 8px; }
+    .cfd-item { display: flex; align-items: center; gap: 7px; padding: 4px 6px; cursor: pointer; border-radius: 5px; font-size: 12px; color: var(--text); user-select: none; }
+    .cfd-item:hover { background: var(--row-hover); }
+    .cfd-item input[type=checkbox] { cursor: pointer; accent-color: var(--accent); flex-shrink: 0; }
+    .cfd-sep { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
+    .cfd-footer { display: flex; gap: 8px; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--border); }
+    .cfd-btn { padding: 5px 14px; border-radius: 6px; border: 1px solid var(--border); background: #1a1a1a; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .cfd-btn:hover { color: var(--text); border-color: var(--muted); }
+    .cfd-btn-ok { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .cfd-btn-ok:hover { opacity: .85; }
+
+    @media (max-width: 900px) {
+      main { padding: 16px; } header { padding: 11px 16px; }
+      .upload-row { grid-template-columns: 1fr; }
+      .summary-cards { grid-template-columns: repeat(2, 1fr); }
+      .header-right { margin-left: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Settings Modal ── -->
+<div class="modal-overlay" id="settings-modal" onclick="onModalOverlayClick(event)">
+  <div class="modal">
+    <h2>⚙️ AI API Settings</h2>
+    <p class="modal-subtitle">
+      Your settings are saved in your browser's local storage and never sent anywhere except directly to the API endpoint you configure.
+    </p>
+    <div class="settings-status" id="settings-status">✓ Settings saved successfully.</div>
+    <div class="settings-warning" id="settings-warning"></div>
+
+    <div class="modal-field">
+      <label>API Base URL</label>
+      <input type="text" id="cfg-base-url" placeholder="http://10.161.112.104:3000/v1" spellcheck="false" autocomplete="off" />
+      <div class="hint">OpenAI-compatible endpoint. Leave blank to use official OpenAI (api.openai.com).</div>
+    </div>
+    <div class="modal-field">
+      <label>API Key</label>
+      <input type="password" id="cfg-api-key" placeholder="sk-…" autocomplete="off" />
+      <div class="hint">Stored only in your browser — never transmitted to any third party.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn modal-btn-cancel" onclick="closeSettings()">Cancel</button>
+      <button class="modal-btn modal-btn-save" onclick="saveSettings()">💾 Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="logo">⇄</div>
+  <div>
+    <h1>CNT AI Reviewer</h1>
+    <span class="subtitle">Compare · Analyse · Approve</span>
+  </div>
+  <div class="header-right">
+    <a class="btn-home" href="../index.html">&#x1F9E0; Aion</a>
+    <div class="model-select-wrap">
+      <label for="model-select">🤖 Model</label>
+      <select id="model-select">
+        <option value="DeepSeek-r1-0528-fp16-671b">🧠 DeepSeek R1</option>
+        <option value="gpt-oss-120b">✨ GPT-OSS 120B</option>
+        <option value="gpt-5-mini">⚡ GPT-5 Mini</option>
+      </select>
+    </div>
+    <button class="btn-settings" id="btn-settings" onclick="openSettings()">⚙️ API Settings</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── No-config banner ── -->
+  <div class="no-config-banner hidden" id="no-config-banner">
+    ⚠️ AI API not configured — AI Review will not work until you set your endpoint and key.
+    <button onclick="openSettings()">Configure now</button>
+  </div>
+
+  <!-- ── Upload ── -->
+  <div class="upload-row">
+    <div class="upload-card file-a" id="dropA"
+         ondragover="onDragOver(event,'A')" ondragleave="onDragLeave('A')" ondrop="onDrop(event,'A')">
+      <input type="file" accept=".cnt,.CNT,.xml" onchange="loadFile(event,'A')" id="inputA" />
+      <div class="icon">📄</div>
+      <div class="label">BASE CNT</div>
+      <div class="filename" id="nameA">Drop or click to select .CNT file</div>
+      <div class="hint" id="hintA">Base / Reference file</div>
+      <div id="badgeA" style="display:none" class="badge">✓ Loaded</div>
+    </div>
+    <div class="upload-card file-b" id="dropB"
+         ondragover="onDragOver(event,'B')" ondragleave="onDragLeave('B')" ondrop="onDrop(event,'B')">
+      <input type="file" accept=".cnt,.CNT,.xml" onchange="loadFile(event,'B')" id="inputB" />
+      <div class="icon">📄</div>
+      <div class="label">NEW CNT</div>
+      <div class="filename" id="nameB">Drop or click to select .CNT file</div>
+      <div class="hint" id="hintB">New / Updated file</div>
+      <div id="badgeB" style="display:none" class="badge">✓ Loaded</div>
+    </div>
+  </div>
+
+  <!-- ── Config ── -->
+  <div class="config-area">
+    <div>
+      <div class="config-label">Review Criteria
+        <span style="font-weight:400;text-transform:none;letter-spacing:0;font-style:italic">(optional)</span>
+      </div>
+      <textarea id="criteria"
+        placeholder="e.g.&#10;• Check for removed safety parameters&#10;• Validate INIT DATA changes are intentional&#10;• Ensure USE CASES assignments are complete and consistent"></textarea>
+    </div>
+    <div class="action-bar">
+      <button class="btn btn-primary" id="btnCompare" onclick="doCompare()" disabled>⇄ Compare</button>
+      <button class="btn btn-ai"      id="btnAI"      onclick="doAIReview()" disabled>🤖 AI Review Judgment</button>
+      <button class="btn btn-secondary" onclick="reset()">✕ Reset</button>
+      <span id="loading">⏳ Parsing…</span>
+      <button class="btn btn-export" id="btnExport" onclick="exportCSV()" style="display:none">⬇ Export CSV</button>
+    </div>
+  </div>
+
+  <!-- ── AI error ── -->
+  <div class="ai-error" id="ai-error"></div>
+
+  <!-- ── AI Report Panel ── -->
+  <div id="ai-panel">
+    <div class="ai-spinner" id="ai-spinner">
+      <div class="spinner-icon">🤖</div>
+      <div>AI is analysing changes…</div>
+      <div style="font-size:11px;margin-top:6px;color:var(--muted)">This may take 15–60 seconds depending on model</div>
+    </div>
+    <div class="ai-report-card" id="ai-report-card">
+      <div class="ai-verdict-banner">
+        <span class="ai-verdict-title">AI Review</span>
+        <span class="verdict-badge v-reviewed" id="ai-verdict-badge">📋 REVIEWED</span>
+        <span class="risk-badge r-medium" id="ai-risk-badge" style="display:none">—</span>
+        <span class="ai-model-tag" id="ai-model-tag"></span>
+        <button class="btn-copy-md" onclick="copyMarkdown()">⎘ Copy Report</button>
+      </div>
+      <div class="ai-summary-text" id="ai-summary-text"></div>
+      <div class="report-toggle" id="report-toggle" onclick="toggleFullReport()">
+        <span class="chevron">▼</span>
+        <span id="toggle-label">Show Full AI Report</span>
+      </div>
+      <div class="ai-full-report" id="ai-full-report">
+        <div class="md-body" id="ai-report-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Compare Results ── -->
+  <div class="summary" id="summary">
+    <div class="summary-cards">
+      <div class="stat-card stat-total"><div class="val" id="sTotal">0</div><div class="key">Total Entries</div></div>
+      <div class="stat-card stat-match"><div class="val" id="sMatch">0</div><div class="key">Identical</div></div>
+      <div class="stat-card stat-diff"><div class="val" id="sDiff">0</div><div class="key">Different</div></div>
+      <div class="stat-card stat-only-a"><div class="val" id="sOnlyA">0</div><div class="key">Only in BASE</div></div>
+      <div class="stat-card stat-only-b"><div class="val" id="sOnlyB">0</div><div class="key">Only in NEW</div></div>
+    </div>
+
+    <div class="filter-bar">
+      <input type="text" id="search" placeholder="🔍  Search by name…" oninput="renderTable()" />
+      <button class="filter-btn active"   data-filter="ALL"    onclick="setFilter('ALL')">All</button>
+      <button class="filter-btn f-match"  data-filter="MATCH"  onclick="setFilter('MATCH')">✓ Match</button>
+      <button class="filter-btn f-diff"   data-filter="DIFF"   onclick="setFilter('DIFF')">⚠ Diff</button>
+      <button class="filter-btn f-only-a" data-filter="ONLY_A" onclick="setFilter('ONLY_A')">▶ Only BASE</button>
+      <button class="filter-btn f-only-b" data-filter="ONLY_B" onclick="setFilter('ONLY_B')">▶ Only NEW</button>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>STATUS           <button class="col-filter-btn" data-field="status"  onclick="openColFilter('status',this);event.stopPropagation()">▾</button></th>
+              <th>DATAPOINTER NAME <button class="col-filter-btn" data-field="name"    onclick="openColFilter('name',this);event.stopPropagation()">▾</button></th>
+              <th>DATA SIZE        <button class="col-filter-btn" data-field="aLen"    onclick="openColFilter('aLen',this);event.stopPropagation()">▾</button></th>
+              <th class="a-col">INIT DATA (BASE) <button class="col-filter-btn" data-field="aOrg"  onclick="openColFilter('aOrg',this);event.stopPropagation()">▾</button></th>
+              <th class="b-col">INIT DATA (NEW)  <button class="col-filter-btn" data-field="bOrg"  onclick="openColFilter('bOrg',this);event.stopPropagation()">▾</button></th>
+              <th class="a-col">USE CASES (BASE) <button class="col-filter-btn" data-field="aSess" onclick="openColFilter('aSess',this);event.stopPropagation()">▾</button></th>
+              <th class="b-col">USE CASES (NEW)  <button class="col-filter-btn" data-field="bSess" onclick="openColFilter('bSess',this);event.stopPropagation()">▾</button></th>
+              <th>COMPONENT <button class="col-filter-btn" data-field="aComp"  onclick="openColFilter('aComp',this);event.stopPropagation()">▾</button></th>
+              <th>IDENT     <button class="col-filter-btn" data-field="aIdent" onclick="openColFilter('aIdent',this);event.stopPropagation()">▾</button></th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div id="empty-state">
+          <div class="big">📂</div>
+          <p>Load two .CNT files and click <strong>Compare</strong> or <strong>AI Review</strong>.</p>
+        </div>
+      </div>
+      <div class="row-count" id="rowCount" style="display:none"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Column filter dropdown overlay -->
+<div id="col-filter-dropdown" onclick="event.stopPropagation()">
+  <input type="text" id="cfd-search" class="cfd-search" placeholder="🔍 Search values…" oninput="cfdSearch(this.value)" />
+  <div id="cfd-list" class="cfd-list"></div>
+  <div class="cfd-footer">
+    <button class="cfd-btn" onclick="cfdClear()">Clear Filter</button>
+    <button class="cfd-btn cfd-btn-ok" onclick="cfdApply()">OK</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// SETTINGS  (stored in localStorage)
+// ═══════════════════════════════════════════════════════════════
+const LS_KEY = 'cnt_ai_reviewer_settings';
+
+function loadSettings() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { return {}; }
+}
+function saveSettings() {
+  const baseUrl = document.getElementById('cfg-base-url').value.trim().replace(/\/$/, '');
+  const apiKey  = document.getElementById('cfg-api-key').value.trim();
+
+  const warn = document.getElementById('settings-warning');
+  warn.classList.remove('visible');
+
+  if (!apiKey) {
+    warn.textContent = '⚠ API Key is required.';
+    warn.classList.add('visible');
+    return;
+  }
+
+  const cfg = { baseUrl, apiKey };
+  localStorage.setItem(LS_KEY, JSON.stringify(cfg));
+
+  document.getElementById('settings-status').classList.add('visible');
+  setTimeout(() => document.getElementById('settings-status').classList.remove('visible'), 2500);
+
+  updateSettingsButton(cfg);
+  document.getElementById('no-config-banner').classList.add('hidden');
+}
+
+function updateSettingsButton(cfg) {
+  const btn = document.getElementById('btn-settings');
+  if (cfg && cfg.apiKey) {
+    btn.classList.add('configured');
+    btn.textContent = '✓ API Configured';
+  } else {
+    btn.classList.remove('configured');
+    btn.textContent = '⚙️ API Settings';
+  }
+}
+
+function getSelectedModel() {
+  return document.getElementById('model-select').value;
+}
+
+function openSettings() {
+  const cfg = loadSettings();
+  document.getElementById('cfg-base-url').value = cfg.baseUrl || '';
+  document.getElementById('cfg-api-key').value  = cfg.apiKey  || '';
+  document.getElementById('settings-status').classList.remove('visible');
+  document.getElementById('settings-warning').classList.remove('visible');
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('open');
+}
+function onModalOverlayClick(e) {
+  if (e.target === document.getElementById('settings-modal')) closeSettings();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeSettings();
+    cfdCancel();
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const state = { A: null, B: null, nameA: '', nameB: '', rows: [], filter: 'ALL', colFilters: {},
+                rawTextA: '', rawTextB: '' };
+let _rawMarkdown = '';
+
+// ═══════════════════════════════════════════════════════════════
+// FILE LOADING
+// ═══════════════════════════════════════════════════════════════
+function loadFile(evt, side) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  readFileSide(file, side);
+}
+function onDragOver(evt, side) {
+  evt.preventDefault();
+  document.getElementById('drop' + side).classList.add('drag-over');
+}
+function onDragLeave(side) {
+  document.getElementById('drop' + side).classList.remove('drag-over');
+}
+function onDrop(evt, side) {
+  evt.preventDefault();
+  document.getElementById('drop' + side).classList.remove('drag-over');
+  const file = evt.dataTransfer.files[0];
+  if (!file) return;
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  document.getElementById('input' + side).files = dt.files;
+  readFileSide(file, side);
+}
+function readFileSide(file, side) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    const parsed = parseCNT(text);
+    state[side] = parsed;
+    state['name' + side] = file.name;
+    if (side === 'A') state.rawTextA = text;
+    else              state.rawTextB = text;
+    document.getElementById('name'  + side).textContent = file.name;
+    document.getElementById('hint'  + side).textContent = Object.keys(parsed).length + ' DATAPOINTERs loaded';
+    document.getElementById('badge' + side).style.display = 'inline-block';
+    document.getElementById('drop'  + side).classList.add('loaded');
+    if (state.A && state.B) {
+      document.getElementById('btnCompare').disabled = false;
+      document.getElementById('btnAI').disabled = false;
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CNT XML PARSER
+// ═══════════════════════════════════════════════════════════════
+function parseCNT(xmlText) {
+  const parser = new DOMParser();
+  const doc    = parser.parseFromString(xmlText, 'application/xml');
+  const result = {};
+
+  const sessions = doc.querySelectorAll('SESSION');
+  let targetSession = null;
+  for (const s of sessions) {
+    const nameEl = s.querySelector('SESSION-NAME');
+    if (nameEl && nameEl.textContent.trim() === '__ALL__') { targetSession = s; break; }
+  }
+  const container = targetSession || doc;
+  for (const dp of container.querySelectorAll('DATAPOINTER')) {
+    const name   = (dp.querySelector('DATAPOINTER-NAME')      || {}).textContent || '';
+    const ident  = (dp.querySelector('DATAPOINTER-IDENT')     || {}).textContent || '';
+    const length = (dp.querySelector('LENGTH')                || {}).textContent || '';
+    const fmt    = (dp.querySelector('DATAFORMAT-IDENTIFIER') || {}).textContent || '';
+    if (name.trim()) result[name.trim()] = { ident: ident.trim(), length: length.trim(), fmt: fmt.trim(), comp: '', orgData: '', sessions: '' };
+  }
+
+  for (const db of doc.querySelectorAll('DATABLOCK')) {
+    const dbNameEl = db.querySelector('DATABLOCK-NAME');
+    if (!dbNameEl) continue;
+    const dbName = dbNameEl.textContent.trim();
+
+    if (dbName.endsWith('__Metadata')) {
+      const baseName = dbName.slice(0, -'__Metadata'.length);
+      if (baseName in result) {
+        for (const dataEl of db.querySelectorAll('DATA')) {
+          const text = dataEl.textContent || '';
+          if (text.startsWith('description=')) {
+            const m = text.match(/- Component:\s*([^\n]+)/);
+            if (m) {
+              result[baseName].comp = m[1].trim();
+              const prefix = baseName + '[';
+              for (const key of Object.keys(result)) {
+                if (key.startsWith(prefix)) result[key].comp = m[1].trim();
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    if (dbName.endsWith('__Org')) {
+      let cls = '';
+      for (const child of db.children) {
+        if (child.tagName === 'DATABLOCK-CLASS') { cls = child.textContent.trim(); break; }
+      }
+      if (cls === 'eeprom_data_original') {
+        const baseName = dbName.slice(0, -'__Org'.length);
+        if (baseName in result) {
+          const bytes = [];
+          for (const child of db.children) {
+            if (child.tagName === 'DATA') { const v = child.textContent.trim(); if (v) bytes.push(v); }
+          }
+          result[baseName].orgData = bytes.join(' ');
+        }
+      }
+    }
+  }
+
+  const sessMap = {};
+  const SESSION_LABELS = { 'Delivery State': 'DS', 'Reset To Delivery State': 'RTDS' };
+  for (const s of doc.querySelectorAll('SESSION')) {
+    const snEl = s.querySelector('SESSION-NAME');
+    if (!snEl) continue;
+    const sname = snEl.textContent.trim();
+    if (['__ALL__','__VARIANTHANDLING__','__FAILURE_MEMORY__'].includes(sname)) continue;
+    const commentEl = s.querySelector('COMMENT');
+    let displayName = sname;
+    if (commentEl && commentEl.textContent.trim()) {
+      const c = commentEl.textContent.trim();
+      displayName = SESSION_LABELS[c] ?? c;
+    }
+    for (const dp of s.querySelectorAll('DATAPOINTER')) {
+      const n = ((dp.querySelector('DATAPOINTER-NAME') || {}).textContent || '').trim();
+      if (!(n in result)) continue;
+      if (!sessMap[n]) sessMap[n] = [];
+      if (!sessMap[n].includes(displayName)) sessMap[n].push(displayName);
+    }
+  }
+  for (const key of Object.keys(result)) {
+    result[key].sessions = sessMap[key] ? sessMap[key].join(', ') : '';
+  }
+  return result;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UNIFIED DIFF  (JavaScript port of Python difflib.unified_diff)
+// ═══════════════════════════════════════════════════════════════
+function buildUnifiedDiff(oldText, newText) {
+  const oldLines = oldText.split('\n');
+  const newLines = newText.split('\n');
+
+  // Build LCS-based diff using Myers-style sequence matcher
+  const ops = diffSequences(oldLines, newLines);
+  if (!ops.length) return '(no textual differences detected)';
+
+  const CONTEXT = 3;
+  const hunks = [];
+  let hunk = null;
+
+  for (const op of ops) {
+    const { type, oldStart, oldEnd, newStart, newEnd } = op;
+    if (type === 'equal') {
+      const lines = oldLines.slice(oldStart, oldEnd);
+      if (hunk) {
+        const tail = lines.slice(0, CONTEXT);
+        for (const l of tail) hunk.lines.push(' ' + l);
+        hunk.oldLen += tail.length; hunk.newLen += tail.length;
+        if (lines.length > CONTEXT * 2) { hunks.push(hunk); hunk = null; }
+        else if (lines.length > CONTEXT) {
+          const head = lines.slice(lines.length - CONTEXT);
+          hunk = { oldStart: oldEnd - CONTEXT, newStart: newEnd - CONTEXT, oldLen: CONTEXT, newLen: CONTEXT, lines: head.map(l => ' ' + l) };
+        }
+      } else if (lines.length > CONTEXT) {
+        const head = lines.slice(lines.length - CONTEXT);
+        hunk = { oldStart: oldEnd - CONTEXT, newStart: newEnd - CONTEXT, oldLen: CONTEXT, newLen: CONTEXT, lines: head.map(l => ' ' + l) };
+      }
+    } else {
+      if (!hunk) hunk = { oldStart: oldStart + 1, newStart: newStart + 1, oldLen: 0, newLen: 0, lines: [] };
+      if (type === 'delete' || type === 'replace') {
+        for (let i = oldStart; i < oldEnd; i++) { hunk.lines.push('-' + oldLines[i]); hunk.oldLen++; }
+      }
+      if (type === 'insert' || type === 'replace') {
+        for (let i = newStart; i < newEnd; i++) { hunk.lines.push('+' + newLines[i]); hunk.newLen++; }
+      }
+    }
+  }
+  if (hunk) hunks.push(hunk);
+
+  if (!hunks.length) return '(no textual differences detected)';
+
+  let out = `--- old.cnt\n+++ new.cnt\n`;
+  for (const h of hunks) {
+    out += `@@ -${h.oldStart},${h.oldLen} +${h.newStart},${h.newLen} @@\n`;
+    out += h.lines.join('\n') + '\n';
+  }
+  return out;
+}
+
+function diffSequences(a, b) {
+  // Simple O(ND) diff producing edit ops
+  const n = a.length, m = b.length;
+  const ops = [];
+  let i = 0, j = 0;
+  // Build edit script via dynamic programming
+  const dp = [];
+  for (let x = 0; x <= n; x++) { dp[x] = []; for (let y = 0; y <= m; y++) dp[x][y] = 0; }
+  for (let x = 1; x <= n; x++) for (let y = 1; y <= m; y++) {
+    dp[x][y] = (a[x-1] === b[y-1]) ? dp[x-1][y-1] + 1 : Math.max(dp[x-1][y], dp[x][y-1]);
+  }
+  // Traceback
+  const script = [];
+  let x = n, y = m;
+  while (x > 0 || y > 0) {
+    if (x > 0 && y > 0 && a[x-1] === b[y-1]) { script.push({ t: '=', oi: x-1, ni: y-1 }); x--; y--; }
+    else if (y > 0 && (x === 0 || dp[x][y-1] >= dp[x-1][y])) { script.push({ t: '+', ni: y-1 }); y--; }
+    else { script.push({ t: '-', oi: x-1 }); x--; }
+  }
+  script.reverse();
+
+  // Collapse into ops
+  let si = 0;
+  while (si < script.length) {
+    const s = script[si];
+    if (s.t === '=') {
+      let ei = si;
+      while (ei < script.length && script[ei].t === '=') ei++;
+      ops.push({ type: 'equal', oldStart: script[si].oi, oldEnd: script[ei-1].oi+1, newStart: script[si].ni, newEnd: script[ei-1].ni+1 });
+      si = ei;
+    } else {
+      let oi = si, ni = si;
+      const olds = [], news = [];
+      while (si < script.length && script[si].t !== '=') {
+        if (script[si].t === '-') { olds.push(script[si].oi); }
+        else                      { news.push(script[si].ni); }
+        si++;
+      }
+      if (olds.length && news.length) ops.push({ type: 'replace', oldStart: olds[0], oldEnd: olds[olds.length-1]+1, newStart: news[0], newEnd: news[news.length-1]+1 });
+      else if (olds.length)           ops.push({ type: 'delete',  oldStart: olds[0], oldEnd: olds[olds.length-1]+1, newStart: (news[0]??olds[0]), newEnd: (news[0]??olds[0]) });
+      else                            ops.push({ type: 'insert',  oldStart: (olds[0]??news[0]), oldEnd: (olds[0]??news[0]), newStart: news[0], newEnd: news[news.length-1]+1 });
+    }
+  }
+  return ops;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COMPARE
+// ═══════════════════════════════════════════════════════════════
+function runCompare() {
+  document.getElementById('loading').style.display = 'inline';
+  setTimeout(() => {
+    const a = state.A, b = state.B;
+    const allKeys = [...new Set([...Object.keys(a), ...Object.keys(b)])].sort();
+    const rows = [];
+    for (const name of allKeys) {
+      const inA = name in a, inB = name in b;
+      if (inA && inB) {
+        const diffs = [];
+        if (a[name].orgData  !== b[name].orgData)  diffs.push('INIT DATA');
+        if (a[name].sessions !== b[name].sessions) diffs.push('USE CASES');
+        rows.push({ name, inA: true, inB: true,
+          aIdent: a[name].ident, aLen: a[name].length, aComp: a[name].comp,
+          bIdent: b[name].ident, bLen: b[name].length, bComp: b[name].comp,
+          aOrg: a[name].orgData, bOrg: b[name].orgData,
+          aSess: a[name].sessions, bSess: b[name].sessions,
+          status: diffs.length ? 'DIFF' : 'MATCH', diffs });
+      } else if (inA) {
+        rows.push({ name, inA: true, inB: false,
+          aIdent: a[name].ident, aLen: a[name].length, aComp: a[name].comp,
+          bIdent: '', bLen: '', bComp: '',
+          aOrg: a[name].orgData, bOrg: '',
+          aSess: a[name].sessions, bSess: '',
+          status: 'ONLY_A', diffs: [] });
+      } else {
+        rows.push({ name, inA: false, inB: true,
+          aIdent: '', aLen: '', aComp: '',
+          bIdent: b[name].ident, bLen: b[name].length, bComp: b[name].comp,
+          aOrg: '', bOrg: b[name].orgData,
+          aSess: '', bSess: b[name].sessions,
+          status: 'ONLY_B', diffs: [] });
+      }
+    }
+    state.rows = rows;
+    document.getElementById('loading').style.display = 'none';
+
+    document.getElementById('sTotal').textContent = rows.length;
+    document.getElementById('sMatch').textContent = rows.filter(r => r.status === 'MATCH').length;
+    document.getElementById('sDiff').textContent  = rows.filter(r => r.status === 'DIFF').length;
+    document.getElementById('sOnlyA').textContent = rows.filter(r => r.status === 'ONLY_A').length;
+    document.getElementById('sOnlyB').textContent = rows.filter(r => r.status === 'ONLY_B').length;
+    document.getElementById('summary').style.display = 'block';
+    document.getElementById('btnExport').style.display = 'inline-block';
+    document.getElementById('empty-state').style.display = 'none';
+
+    state.filter = 'ALL';
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-filter="ALL"]').classList.add('active');
+    renderTable();
+  }, 50);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER TABLE
+// ═══════════════════════════════════════════════════════════════
+function orgDisplay(hex, isDiff) {
+  if (!hex) return '<span class="missing">—</span>';
+  const bytes = hex.split(' ');
+  const MAX = 16;
+  const display = bytes.length > MAX ? bytes.slice(0, MAX).join(' ') + ' … (' + bytes.length + ' bytes)' : hex;
+  return `<span${isDiff ? ' class="changed"' : ''} title="${hex}">${display}</span>`;
+}
+
+function renderTable() {
+  const search = document.getElementById('search').value.toLowerCase();
+  const filter = state.filter;
+  const filtered = state.rows.filter(r => {
+    if (filter !== 'ALL' && r.status !== filter) return false;
+    if (search && !r.name.toLowerCase().includes(search)) return false;
+    for (const [field, allowed] of Object.entries(state.colFilters)) {
+      if (!allowed.has(getFieldVal(r, field))) return false;
+    }
+    return true;
+  });
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  let idx = 0;
+  for (const r of filtered) {
+    idx++;
+    const tr = document.createElement('tr');
+    if (r.status === 'DIFF') tr.classList.add('highlight');
+    const diffO = r.diffs.includes('INIT DATA');
+    const diffS = r.diffs.includes('USE CASES');
+    const statusHTML = (() => {
+      if (r.status === 'MATCH')  return `<span class="badge-status s-match">✓ MATCH</span>`;
+      if (r.status === 'ONLY_A') return `<span class="badge-status s-only-a">▶ ONLY BASE</span>`;
+      if (r.status === 'ONLY_B') return `<span class="badge-status s-only-b">▶ ONLY NEW</span>`;
+      return `<span class="badge-status s-diff">⚠ DIFF</span><div class="s-diff-detail">${r.diffs.join(' | ')}</div>`;
+    })();
+    const missing = v => v ? v : '<span class="missing">—</span>';
+    const mayDiff = (v, d) => d && v ? `<span class="changed">${v}</span>` : missing(v);
+    tr.innerHTML = `
+      <td style="color:var(--muted);font-size:11px">${idx}</td>
+      <td>${statusHTML}</td>
+      <td class="col-name">${highlight(r.name, search)}</td>
+      <td class="col-len">${missing(r.aLen)}</td>
+      <td class="col-org" title="${r.aOrg}">${orgDisplay(r.aOrg, diffO && r.inA && r.inB)}</td>
+      <td class="col-org" title="${r.bOrg}">${orgDisplay(r.bOrg, diffO && r.inA && r.inB)}</td>
+      <td class="col-sessions">${mayDiff(r.aSess, diffS && r.inA && r.inB)}</td>
+      <td class="col-sessions">${mayDiff(r.bSess, diffS && r.inA && r.inB)}</td>
+      <td class="col-comp">${missing(r.aComp)}</td>
+      <td class="col-ident">${missing(r.aIdent)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  const rc = document.getElementById('rowCount');
+  rc.style.display = 'block';
+  rc.textContent = `Showing ${filtered.length} of ${state.rows.length} entries`;
+}
+
+function highlight(text, search) {
+  if (!search) return text;
+  const idx = text.toLowerCase().indexOf(search);
+  if (idx < 0) return text;
+  return text.slice(0, idx)
+    + `<mark style="background:#3b4a2a;color:#a3e635;border-radius:2px">${text.slice(idx, idx + search.length)}</mark>`
+    + text.slice(idx + search.length);
+}
+
+function setFilter(f) {
+  state.filter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-filter="${f}"]`).classList.add('active');
+  renderTable();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COLUMN FILTERS
+// ═══════════════════════════════════════════════════════════════
+let cfdField = null;
+
+function getFieldVal(r, field) {
+  const map = { name: r.name, aComp: r.aComp, aIdent: r.aIdent, aLen: r.aLen, aOrg: r.aOrg, bOrg: r.bOrg, aSess: r.aSess, bSess: r.bSess, status: r.status };
+  return map[field] !== undefined ? (map[field] || '') : '';
+}
+
+function openColFilter(field, btnEl) {
+  const dd = document.getElementById('col-filter-dropdown');
+  if (cfdField === field && dd.style.display === 'block') { cfdCancel(); return; }
+  cfdField = field;
+  const vals = [...new Set(state.rows.map(r => getFieldVal(r, field)))].sort((a, b) => {
+    const na = parseFloat(a), nb = parseFloat(b);
+    return (!isNaN(na) && !isNaN(nb)) ? na - nb : a.localeCompare(b);
+  });
+  const active = state.colFilters[field];
+  const listEl = document.getElementById('cfd-list');
+  listEl.innerHTML = '';
+  const allLbl = document.createElement('label');
+  allLbl.className = 'cfd-item cfd-all';
+  allLbl.innerHTML = `<input type="checkbox" id="cfd-chk-all" ${!active ? 'checked' : ''} onchange="cfdToggleAll(this)"><span style="font-weight:600">(Select All)</span>`;
+  listEl.appendChild(allLbl);
+  const sep = document.createElement('hr'); sep.className = 'cfd-sep';
+  listEl.appendChild(sep);
+  for (const val of vals) {
+    const checked = !active || active.has(val);
+    const lbl = document.createElement('label');
+    lbl.className = 'cfd-item';
+    lbl.innerHTML = `<input type="checkbox" value="${val.replace(/"/g,'&quot;')}" ${checked ? 'checked' : ''} onchange="cfdSyncAll()"><span>${val || '<em style="color:var(--muted)">(empty)</em>'}</span>`;
+    listEl.appendChild(lbl);
+  }
+  const rect = btnEl.getBoundingClientRect();
+  dd.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 240)) + 'px';
+  dd.style.top  = (rect.bottom + 4) + 'px';
+  dd.style.display = 'block';
+  const si = document.getElementById('cfd-search');
+  si.value = ''; cfdSearch('');
+  setTimeout(() => si.focus(), 20);
+}
+function cfdSearch(term) {
+  const t = term.toLowerCase();
+  document.querySelectorAll('#cfd-list .cfd-item:not(.cfd-all)').forEach(el => {
+    el.style.display = el.querySelector('span').textContent.toLowerCase().includes(t) ? '' : 'none';
+  });
+  cfdSyncAll();
+}
+function cfdToggleAll(cb) {
+  document.querySelectorAll('#cfd-list .cfd-item:not(.cfd-all)').forEach(el => {
+    if (el.style.display !== 'none') el.querySelector('input').checked = cb.checked;
+  });
+}
+function cfdSyncAll() {
+  const vis = [...document.querySelectorAll('#cfd-list .cfd-item:not(.cfd-all)')].filter(el => el.style.display !== 'none');
+  const ca = document.getElementById('cfd-chk-all');
+  if (ca) ca.checked = vis.length > 0 && vis.every(el => el.querySelector('input').checked);
+}
+function cfdApply() {
+  if (!cfdField) return;
+  const all = [...document.querySelectorAll('#cfd-list .cfd-item:not(.cfd-all) input')];
+  const checked = all.filter(i => i.checked).map(i => i.value);
+  if (checked.length >= all.length) delete state.colFilters[cfdField];
+  else state.colFilters[cfdField] = new Set(checked);
+  document.getElementById('col-filter-dropdown').style.display = 'none';
+  cfdField = null;
+  renderTable();
+  updateColFilterBtnStates();
+}
+function cfdClear() {
+  if (!cfdField) return;
+  delete state.colFilters[cfdField];
+  document.getElementById('col-filter-dropdown').style.display = 'none';
+  cfdField = null;
+  renderTable();
+  updateColFilterBtnStates();
+}
+function cfdCancel() {
+  document.getElementById('col-filter-dropdown').style.display = 'none';
+  cfdField = null;
+}
+function updateColFilterBtnStates() {
+  document.querySelectorAll('.col-filter-btn[data-field]').forEach(btn => {
+    const on = !!state.colFilters[btn.dataset.field];
+    btn.classList.toggle('active', on);
+    btn.textContent = on ? '▼' : '▾';
+  });
+}
+document.addEventListener('mousedown', e => {
+  const dd = document.getElementById('col-filter-dropdown');
+  if (dd && dd.style.display === 'block' && !dd.contains(e.target) && !e.target.classList.contains('col-filter-btn'))
+    cfdApply();
+});
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT CSV
+// ═══════════════════════════════════════════════════════════════
+function exportCSV() {
+  const na = state.nameA.replace(/\.(CNT|cnt)$/, '');
+  const nb = state.nameB.replace(/\.(CNT|cnt)$/, '');
+  const headers = ['DATAPOINTER-NAME','DATA SIZE',`INIT DATA (${na})`,`INIT DATA (${nb})`,`USE CASES (${na})`,`USE CASES (${nb})`,'COMPONENT','IDENT','STATUS','DIFF FIELDS'];
+  const csvRows = [headers.join(',')];
+  for (const r of state.rows) {
+    csvRows.push([`"${r.name}"`,r.aLen,`"${r.aOrg}"`,`"${r.bOrg}"`,`"${r.aSess}"`,`"${r.bSess}"`,`"${r.aComp}"`,r.aIdent,r.status,`"${r.diffs.join(' | ')}"`].join(','));
+  }
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `CNT_Compare_${na}_vs_${nb}.csv`;
+  a.click();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════════════════════
+function reset() {
+  state.A = null; state.B = null; state.rows = [];
+  state.nameA = ''; state.nameB = ''; state.colFilters = {};
+  state.rawTextA = ''; state.rawTextB = '';
+  ['A','B'].forEach(s => {
+    document.getElementById('name'  + s).textContent = 'Drop or click to select .CNT file';
+    document.getElementById('hint'  + s).textContent = s === 'A' ? 'Base / Reference file' : 'New / Updated file';
+    document.getElementById('badge' + s).style.display = 'none';
+    document.getElementById('drop'  + s).classList.remove('loaded');
+    document.getElementById('input' + s).value = '';
+  });
+  document.getElementById('btnCompare').disabled = true;
+  document.getElementById('btnAI').disabled = true;
+  document.getElementById('btnExport').style.display = 'none';
+  document.getElementById('summary').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'block';
+  document.getElementById('tbody').innerHTML = '';
+  document.getElementById('rowCount').style.display = 'none';
+  document.getElementById('search').value = '';
+  document.getElementById('ai-panel').style.display = 'none';
+  document.getElementById('ai-spinner').classList.remove('visible');
+  document.getElementById('ai-report-card').classList.remove('visible');
+  document.getElementById('ai-error').classList.remove('visible');
+  document.getElementById('ai-full-report').classList.remove('open');
+  document.getElementById('report-toggle').classList.remove('open');
+  document.getElementById('toggle-label').textContent = 'Show Full AI Report';
+  _rawMarkdown = '';
+  cfdCancel();
+  updateColFilterBtnStates();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AI REVIEW  — direct browser fetch to OpenAI-compatible API
+// ═══════════════════════════════════════════════════════════════
+const SYSTEM_PROMPT = `You are a senior technical reviewer specialising in CNT (content/configuration) files.
+You will be given:
+  • The OLD version of a CNT file
+  • The NEW version of a CNT file
+  • A unified diff between them
+  • User-defined review criteria / focus areas
+
+Produce a thorough, structured Markdown review report with these sections:
+
+## 1. Executive Summary
+Brief overview of what changed and the overall risk level (🟢 Low | 🟡 Medium | 🔴 High).
+
+## 2. Change Statistics
+| Metric | Value |
+|--------|-------|
+Quick table: lines added, lines removed, net change, total changed sections.
+
+## 3. Detailed Change Analysis
+For every meaningful change block, explain:
+- **What changed** (exact lines / keys)
+- **Why it matters** (impact, dependency, side-effects)
+- **Risk level** for that specific change
+
+## 4. Review Against Criteria
+Address each of the user's review criteria explicitly, marking each ✅ Pass / ⚠️ Concern / ❌ Fail.
+
+## 5. Critical Issues
+Bullet list of any blockers or high-risk findings that must be resolved before deployment.
+
+## 6. Recommendations
+Actionable suggestions ordered by priority.
+
+## 7. Overall Verdict
+**APPROVED** / **APPROVED WITH CONDITIONS** / **REJECTED** — with a one-sentence justification.
+
+Use clear Markdown. Be precise and concise.`;
+
+function buildDiffSummary() {
+  const rows = state.rows;
+  return JSON.stringify({
+    total:        rows.length,
+    match:        rows.filter(r => r.status === 'MATCH').length,
+    diff:         rows.filter(r => r.status === 'DIFF').length,
+    onlyInBase:   rows.filter(r => r.status === 'ONLY_A').length,
+    onlyInNew:    rows.filter(r => r.status === 'ONLY_B').length,
+    diffDetails:  rows.filter(r => r.status === 'DIFF').slice(0, 50).map(r => ({
+      name: r.name, changes: r.diffs,
+      initData:  r.diffs.includes('INIT DATA')  ? { base: r.aOrg.split(' ').slice(0,8).join(' '), new: r.bOrg.split(' ').slice(0,8).join(' ') } : null,
+      useCases:  r.diffs.includes('USE CASES')  ? { base: r.aSess, new: r.bSess } : null,
+    })),
+    removedEntries: rows.filter(r => r.status === 'ONLY_A').slice(0,30).map(r => r.name),
+    addedEntries:   rows.filter(r => r.status === 'ONLY_B').slice(0,30).map(r => r.name),
+  }, null, 2);
+}
+
+async function submitAIReview() {
+  const cfg = loadSettings();
+  if (!cfg.apiKey) {
+    showAIError('API not configured. Click "⚙️ API Settings" in the header to set your endpoint and key.');
+    return;
+  }
+
+  const model    = getSelectedModel();
+  const criteria = document.getElementById('criteria').value;
+  const oldText  = state.rawTextA;
+  const newText  = state.rawTextB;
+
+  document.getElementById('ai-panel').style.display = 'block';
+  document.getElementById('ai-spinner').classList.add('visible');
+  document.getElementById('ai-report-card').classList.remove('visible');
+  document.getElementById('ai-error').classList.remove('visible');
+
+  const diff        = buildUnifiedDiff(oldText, newText);
+  const diffSummary = buildDiffSummary();
+
+  const userMsg = `=== OLD FILE ===
+${oldText.slice(0, 8000)}
+
+=== NEW FILE ===
+${newText.slice(0, 8000)}
+
+=== UNIFIED DIFF ===
+${diff.slice(0, 6000)}
+
+=== STRUCTURED DIFF SUMMARY (client-side CNT parser) ===
+${diffSummary.slice(0, 3000)}
+
+=== REVIEW CRITERIA ===
+${criteria || 'General review — check correctness, completeness, and safety of changes.'}`;
+
+  const baseUrl = cfg.baseUrl || 'https://api.openai.com/v1';
+  const endpoint = baseUrl.replace(/\/$/, '') + '/chat/completions';
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${cfg.apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user',   content: userMsg },
+        ],
+        temperature: 0.2,
+      }),
+    });
+
+    document.getElementById('ai-spinner').classList.remove('visible');
+
+    if (!res.ok) {
+      let errMsg = `API error ${res.status}`;
+      try { const e = await res.json(); errMsg = e.error?.message || JSON.stringify(e); } catch {}
+      showAIError(errMsg);
+      return;
+    }
+
+    const data = await res.json();
+    let content = data.choices?.[0]?.message?.content || '';
+    // Strip <think> reasoning blocks (DeepSeek / o-series)
+    content = content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+    if (!content) { showAIError('Empty response from AI model.'); return; }
+
+    _rawMarkdown = content;
+    renderAIReport(content, model);
+
+  } catch (err) {
+    document.getElementById('ai-spinner').classList.remove('visible');
+    showAIError('Network error: ' + err.message + ' — Check that your API endpoint allows browser requests (CORS).');
+  }
+}
+
+function showAIError(msg) {
+  const el = document.getElementById('ai-error');
+  el.textContent = '⚠  ' + msg;
+  el.classList.add('visible');
+  document.getElementById('ai-panel').style.display = 'none';
+}
+
+function renderAIReport(markdown, modelUsed) {
+  const vb = document.getElementById('ai-verdict-badge');
+  const upper = markdown.toUpperCase();
+  if (upper.includes('REJECTED')) {
+    vb.textContent = '❌ REJECTED';           vb.className = 'verdict-badge v-rejected';
+  } else if (upper.includes('WITH CONDITIONS') || upper.includes('APPROVED WITH')) {
+    vb.textContent = '⚠️ APPROVED W/ CONDITIONS'; vb.className = 'verdict-badge v-conditions';
+  } else if (upper.includes('APPROVED')) {
+    vb.textContent = '✅ APPROVED';            vb.className = 'verdict-badge v-approved';
+  } else {
+    vb.textContent = '📋 REVIEWED';           vb.className = 'verdict-badge v-reviewed';
+  }
+
+  const rb = document.getElementById('ai-risk-badge');
+  if (upper.match(/🔴|HIGH RISK|RISK.*HIGH/)) {
+    rb.textContent = '🔴 High Risk';   rb.className = 'risk-badge r-high';   rb.style.display = 'inline-block';
+  } else if (upper.match(/🟡|MEDIUM RISK|RISK.*MEDIUM/)) {
+    rb.textContent = '🟡 Medium Risk'; rb.className = 'risk-badge r-medium'; rb.style.display = 'inline-block';
+  } else if (upper.match(/🟢|LOW RISK|RISK.*LOW/)) {
+    rb.textContent = '🟢 Low Risk';    rb.className = 'risk-badge r-low';    rb.style.display = 'inline-block';
+  }
+
+  document.getElementById('ai-model-tag').textContent = modelUsed;
+
+  const m = markdown.match(/##\s*1[^#\n]*\n([\s\S]*?)(?=\n##\s*[0-9]|\n##\s*[A-Z]|$)/i);
+  const snippet = m
+    ? m[1].replace(/[*#_`]/g,'').trim().slice(0, 450) + (m[1].length > 450 ? '…' : '')
+    : markdown.replace(/#+[^\n]*/g,'').replace(/[*_`]/g,'').trim().slice(0, 450) + '…';
+  document.getElementById('ai-summary-text').textContent = snippet;
+
+  document.getElementById('ai-report-body').innerHTML = marked.parse(markdown);
+  document.getElementById('ai-report-card').classList.add('visible');
+  document.getElementById('ai-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleFullReport() {
+  const toggle = document.getElementById('report-toggle');
+  const full   = document.getElementById('ai-full-report');
+  const label  = document.getElementById('toggle-label');
+  toggle.classList.toggle('open');
+  full.classList.toggle('open');
+  label.textContent = toggle.classList.contains('open') ? 'Hide Full Report' : 'Show Full AI Report';
+}
+
+function copyMarkdown() {
+  if (!_rawMarkdown) return;
+  navigator.clipboard.writeText(_rawMarkdown).then(() => {
+    const btn = document.querySelector('.btn-copy-md');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = '⎘ Copy Report', 2000);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUTTON HANDLERS
+// ═══════════════════════════════════════════════════════════════
+function doCompare() {
+  if (!state.A || !state.B) return;
+  document.getElementById('btnCompare').disabled = true;
+  runCompare();
+  setTimeout(() => document.getElementById('btnCompare').disabled = false, 200);
+}
+
+function doAIReview() {
+  if (!state.A || !state.B) return;
+  if (state.rows.length === 0) runCompare();
+  const btn = document.getElementById('btnAI');
+  btn.disabled = true;
+  btn.textContent = '⏳ Reviewing…';
+  submitAIReview().finally(() => {
+    btn.disabled = false;
+    btn.textContent = '🤖 AI Review Judgment';
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+(function init() {
+  const cfg = loadSettings();
+  updateSettingsButton(cfg);
+  if (!cfg.apiKey) {
+    document.getElementById('no-config-banner').classList.remove('hidden');
+  }
+})();
+</script>
+
+</body>
+</html>

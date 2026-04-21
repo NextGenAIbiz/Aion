@@ -4,6 +4,136 @@ AI-powered toolkit for embedded systems and software development — pure static
 
 ---
 
+## Tools
+
+| Tool | File | Description |
+|------|------|-------------|
+| **AI Chat** | `tool/Aion_chat.html` | Multi-role chat with DeepSeek R1, GPT-OSS 120B, GPT-5 Mini. Streaming, think-chain reasoning, document Q&A. |
+| **CNT AI Reviewer** | `tool/EEPROM_review.html` | Compare Base vs New `.CNT` (EEPROM) files, diff every parameter, AI-generated review with verdict and risk rating. |
+
+---
+
+## Features
+
+- **AI Chat** — streaming token-by-token responses with think-chain reasoning display
+- **Role selector** — switch between General, Embedded Automotive, and Cybersecurity personas
+- **Knowledge-base mode** — upload documents (PDF, DOCX, XLSX, TXT, CSV…) and ask questions about them
+- **Multi-document** — load several files at once; each gets its own chip
+- **Chat history** — sessions persisted in browser `localStorage`
+- **CNT Reviewer** — structural diff of EEPROM `.CNT` XML files with per-parameter change table
+- **AI Review** — sends diff to the LLM and returns a verdict (Approved / Conditions / Rejected), risk level, summary, and full markdown report
+- **No backend needed** — runs entirely in the browser; `serve.py` is only needed for local development
+
+---
+
+## Structure
+
+```
+Aion/
+├── index.html                  ← Home dashboard
+├── serve.py                    ← Local static server (stdlib only)
+├── tool/
+│   ├── Aion_chat.html          ← AI Chat (single-file)
+│   └── EEPROM_review.html      ← CNT AI Reviewer (single-file)
+├── .gitignore
+└── README.md
+```
+
+---
+
+## Quick Start (local)
+
+**No installation required.** Python stdlib only.
+
+```powershell
+python serve.py
+```
+
+Browser opens automatically at **http://localhost:8080**.
+
+---
+
+## Configuration
+
+Both tools read API settings from the browser's `localStorage` (set via the ⚙️ Settings panel — no file editing needed).
+
+| Setting | Description |
+|---------|-------------|
+| **Endpoint URL** | OpenAI-compatible base URL, e.g. `http://your-server/v1` |
+| **API Key** | Bearer token for the endpoint |
+
+Settings are saved automatically and restored on next visit.
+
+---
+
+## Supported Models
+
+| Model | Key | Notes |
+|-------|-----|-------|
+| DeepSeek R1 | `deepseek` | Streaming, `<think>` reasoning blocks |
+| GPT-OSS 120B | `gptoss` | Non-streaming, `reasoning_content` field |
+| GPT-5 Mini | `gpt5mini` | Streaming, `<think>` reasoning blocks |
+
+---
+
+## Document Upload (AI Chat)
+
+Supported formats: **PDF**, **DOCX**, **XLSX / XLS**, **TXT**, **CSV**, **MD**, **LOG**
+
+- Click the 📎 button or drag-and-drop files onto the input box
+- Multiple files can be loaded at once — each appears as a chip
+- The model answers **only from the document content**
+- Remove individual files with ✕ on the chip, or clear all via the banner
+
+---
+
+## CNT Reviewer
+
+1. Drop **Base CNT** (old file) and **New CNT** (updated file) onto the upload cards
+2. Optionally enter custom review criteria
+3. Click **Compare** to see the structured diff table
+4. Click **AI Review** to get an LLM-generated report with verdict, risk level, and full markdown analysis
+5. Export the diff table to CSV or copy the AI report as Markdown
+
+---
+
+## Deploying to GitHub Pages
+
+1. Push the repo to GitHub
+2. Go to **Settings → Pages → Source: main / root**
+3. Open a tool, enter your public HTTPS API endpoint in ⚙️ Settings
+
+> ⚠️ Browsers block HTTP calls from HTTPS pages. The API endpoint must be served over HTTPS when hosting on GitHub Pages.
+
+---
+
+## Adding a New Tool
+
+1. Create `tool/<ToolName>.html` as a self-contained single-file app
+2. Add a card to `index.html`:
+
+```html
+<a class="tool-card" href="tool/ToolName.html">
+  <div class="tool-icon">🔧</div>
+  <div class="tool-name">Tool Name</div>
+  <div class="tool-desc">Short description.</div>
+  <span class="tool-tag">Tag</span>
+</a>
+```
+
+---
+
+## Standards & Compliance
+
+Tools are designed with awareness of:
+- **MISRA-C:2012** and **AUTOSAR C++14** coding standards
+- **ISO 26262** functional safety (ASIL A–D)
+- **AUTOSAR Classic / Adaptive** architecture
+- **ASPICE** process assessment
+
+
+---
+
 ## Features
 
 - **AI Chat** — chat with multiple LLM models directly from the browser
