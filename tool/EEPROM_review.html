@@ -33,65 +33,12 @@
     header h1 { font-size: 15px; font-weight: 700; }
     header .subtitle { font-size: 12px; color: var(--muted); }
     .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-    .model-select-wrap { display: flex; align-items: center; gap: 8px; }
-    .model-select-wrap label { font-size: 12px; color: var(--muted); }
-    select#model-select {
-      background: var(--card); border: 1px solid var(--border); border-radius: 6px;
-      color: var(--text); font-size: 13px; font-family: var(--font); padding: 6px 10px; cursor: pointer;
-    }
-    select#model-select:focus { outline: none; border-color: var(--accent); }
-    select#model-select option { background: #1a1a1a; }
-    .btn-settings {
-      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-      color: var(--muted); font-size: 13px; padding: 7px 14px; cursor: pointer;
-      transition: all .15s; white-space: nowrap;
-    }
-    .btn-settings:hover { color: var(--text); border-color: var(--accent); }
-    .btn-settings.configured { border-color: var(--match); color: var(--match); }
     .btn-home {
       background: var(--card); border: 1px solid var(--border); border-radius: 8px;
       color: var(--muted); font-size: 13px; padding: 7px 14px; cursor: pointer;
       transition: all .15s; white-space: nowrap; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
     }
     .btn-home:hover { color: var(--text); border-color: var(--accent); }
-
-    /* ── Settings Modal ── */
-    .modal-overlay {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65);
-      z-index: 10000; align-items: center; justify-content: center;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-      padding: 28px 32px; width: 560px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,.8);
-    }
-    .modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-    .modal .modal-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 22px; line-height: 1.5; }
-    .modal-field { margin-bottom: 16px; }
-    .modal-field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .07em; color: var(--muted); margin-bottom: 6px; }
-    .modal-field input, .modal-field select {
-      width: 100%; background: #1a1a1a; border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); font-size: 13px; font-family: var(--font); padding: 9px 14px; outline: none;
-    }
-    .modal-field input:focus, .modal-field select:focus { border-color: var(--accent); }
-    .modal-field input::placeholder { color: var(--muted); font-family: 'Segoe UI', sans-serif; }
-    .modal-field .hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
-    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
-    .modal-btn { padding: 9px 22px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
-    .modal-btn-save { background: var(--accent); color: #fff; }
-    .modal-btn-cancel { background: #1a1a1a; color: var(--muted); border: 1px solid var(--border); }
-    .modal-btn-cancel:hover { color: var(--text); }
-    .settings-status {
-      display: none; background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3);
-      border-radius: 8px; padding: 8px 14px; font-size: 12px; color: var(--match); margin-bottom: 16px;
-    }
-    .settings-status.visible { display: block; }
-    .settings-warning {
-      display: none; background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3);
-      border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--diff); margin-bottom: 16px; line-height: 1.5;
-    }
-    .settings-warning.visible { display: block; }
 
     /* ── Layout ── */
     main { padding: 28px 40px; max-width: 1600px; margin: 0 auto; }
@@ -141,17 +88,7 @@
     #loading { display: none; font-size: 13px; color: var(--muted); }
 
     /* ── Mixed-content banner ─────────────────────────────── */
-    #mixed-banner { display: none; align-items: center; gap: 9px; padding: 10px 40px; background: #2e2000; border-bottom: 1px solid #7a4f00; font-size: 12.5px; color: #f59e0b; }
-    #mixed-banner.on { display: flex; }
-    #mixed-banner svg { flex-shrink: 0; }
-    #mixed-banner a { color: #fbbf24; }
 
-    /* ── No-config banner ── */
-    .no-config-banner {
-      display: none; background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.35);
-      border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--diff);
-      margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
-    }
     .no-config-banner.hidden { display: none !important; }
     .no-config-banner button { background: rgba(245,158,11,.2); border: 1px solid rgba(245,158,11,.4);
       border-radius: 6px; color: var(--diff); font-size: 12px; font-weight: 600; padding: 4px 12px;
@@ -299,33 +236,6 @@
 </head>
 <body>
 
-<!-- ── Settings Modal ── -->
-<div class="modal-overlay" id="settings-modal" onclick="onModalOverlayClick(event)">
-  <div class="modal">
-    <h2>⚙️ AI API Settings</h2>
-    <p class="modal-subtitle">
-      Your settings are saved in your browser's local storage and never sent anywhere except directly to the API endpoint you configure.
-    </p>
-    <div class="settings-status" id="settings-status">✓ Settings saved successfully.</div>
-    <div class="settings-warning" id="settings-warning"></div>
-
-    <div class="modal-field">
-      <label>API Base URL</label>
-      <input type="text" id="cfg-base-url" placeholder="http://10.161.112.104:3000/v1" spellcheck="false" autocomplete="off" />
-      <div class="hint">OpenAI-compatible endpoint. Leave blank to use official OpenAI (api.openai.com).</div>
-    </div>
-    <div class="modal-field">
-      <label>API Key</label>
-      <input type="password" id="cfg-api-key" placeholder="sk-…" autocomplete="off" />
-      <div class="hint">Stored only in your browser — never transmitted to any third party.</div>
-    </div>
-    <div class="modal-actions">
-      <button class="modal-btn modal-btn-cancel" onclick="closeSettings()">Cancel</button>
-      <button class="modal-btn modal-btn-save" onclick="saveSettings()">💾 Save Settings</button>
-    </div>
-  </div>
-</div>
-
 <header>
   <div class="logo">⇄</div>
   <div>
@@ -334,30 +244,10 @@
   </div>
   <div class="header-right">
     <a class="btn-home" href="../index.html">&#x1F9E0; Aion</a>
-    <div class="model-select-wrap">
-      <label for="model-select">🤖 Model</label>
-      <select id="model-select">
-        <option value="DeepSeek-r1-0528-fp16-671b">🧠 DeepSeek R1</option>
-        <option value="gpt-oss-120b">✨ GPT-OSS 120B</option>
-        <option value="gpt-5-mini">⚡ GPT-5 Mini</option>
-      </select>
-    </div>
-    <button class="btn-settings" id="btn-settings" onclick="openSettings()">⚙️ API Settings</button>
   </div>
 </header>
 
-<div id="mixed-banner">
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-  <span><strong>Local proxy required</strong> &mdash; Your API is <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">http://</code> but this page is <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">https://</code>. AI Review calls are auto-routed via <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">http://localhost:9443</code> &mdash; run <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">python proxy.py</code> (or <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">.\start_proxy.ps1</code>) to start it.</span>
-</div>
-
 <main>
-
-  <!-- ── No-config banner ── -->
-  <div class="no-config-banner hidden" id="no-config-banner">
-    ⚠️ AI API not configured — AI Review will not work until you set your endpoint and key.
-    <button onclick="openSettings()">Configure now</button>
-  </div>
 
   <!-- ── Upload ── -->
   <div class="upload-row">
@@ -491,80 +381,38 @@
 // ═══════════════════════════════════════════════════════════════
 // SETTINGS  (stored in localStorage)
 // ═══════════════════════════════════════════════════════════════
-const LS_KEY = 'cnt_ai_reviewer_settings';
-
-function getProxiedUrl(base) {
-  // Reroute http:// API calls through the local proxy when on an HTTPS page.
-  // http://localhost is always allowed by browsers from https:// pages.
-  if (!base || !(location.protocol === 'https:' && base.startsWith('http://'))) return base;
-  try {
-    const u = new URL(base);
-    return 'http://localhost:9443' + u.pathname.replace(/\/$/, '');
-  } catch { return base; }
-}
+const LS_KEY = 'aion_api_settings';
 
 function loadSettings() {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch { return {}; }
-}
-function saveSettings() {
-  const baseUrl = document.getElementById('cfg-base-url').value.trim().replace(/\/$/, '');
-  const apiKey  = document.getElementById('cfg-api-key').value.trim();
-
-  const warn = document.getElementById('settings-warning');
-  warn.classList.remove('visible');
-
-  if (!apiKey) {
-    warn.textContent = '⚠ API Key is required.';
-    warn.classList.add('visible');
-    return;
-  }
-
-  const cfg = { baseUrl, apiKey };
-  localStorage.setItem(LS_KEY, JSON.stringify(cfg));
-
-  document.getElementById('settings-status').classList.add('visible');
-  setTimeout(() => document.getElementById('settings-status').classList.remove('visible'), 2500);
-
-  updateSettingsButton(cfg);
-  const mixed = cfg.baseUrl && location.protocol === 'https:' && cfg.baseUrl.startsWith('http://');
-  document.getElementById('mixed-banner').classList.toggle('on', mixed);
-  document.getElementById('no-config-banner').classList.add('hidden');
-}
-
-function updateSettingsButton(cfg) {
-  const btn = document.getElementById('btn-settings');
-  if (cfg && cfg.apiKey) {
-    btn.classList.add('configured');
-    btn.textContent = '✓ API Configured';
-  } else {
-    btn.classList.remove('configured');
-    btn.textContent = '⚙️ API Settings';
-  }
+  try {
+    // Migrate from old per-tool key → shared key (one-time, silent)
+    const OLD_KEY = 'cnt_ai_reviewer_settings';
+    const shared = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    if (!shared.key) {
+      const old = JSON.parse(localStorage.getItem(OLD_KEY) || '{}');
+      if (old.apiKey) {
+        shared.base  = shared.base  || old.baseUrl || '';
+        shared.key   = old.apiKey;
+        shared.model = shared.model || 'deepseek';
+        try { localStorage.setItem(LS_KEY, JSON.stringify(shared)); } catch {}
+      }
+    }
+    const MODEL_NAMES = {
+      deepseek: 'DeepSeek-r1-0528-fp16-671b',
+      gptoss:   'gpt-oss-120b',
+      gpt5mini: 'gpt-5-mini',
+    };
+    const modelKey = shared.model || 'deepseek';
+    return { baseUrl: shared.base || '', apiKey: shared.key || '', model: MODEL_NAMES[modelKey] || MODEL_NAMES.deepseek };
+  } catch { return { baseUrl: '', apiKey: '', model: 'DeepSeek-r1-0528-fp16-671b' }; }
 }
 
 function getSelectedModel() {
-  return document.getElementById('model-select').value;
+  return loadSettings().model;
 }
 
-function openSettings() {
-  const cfg = loadSettings();
-  document.getElementById('cfg-base-url').value = cfg.baseUrl || '';
-  document.getElementById('cfg-api-key').value  = cfg.apiKey  || '';
-  document.getElementById('settings-status').classList.remove('visible');
-  document.getElementById('settings-warning').classList.remove('visible');
-  document.getElementById('settings-modal').classList.add('open');
-}
-function closeSettings() {
-  document.getElementById('settings-modal').classList.remove('open');
-}
-function onModalOverlayClick(e) {
-  if (e.target === document.getElementById('settings-modal')) closeSettings();
-}
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closeSettings();
-    cfdCancel();
-  }
+  if (e.key === 'Escape') cfdCancel();
 });
 
 // ═══════════════════════════════════════════════════════════════
@@ -1151,7 +999,7 @@ function buildDiffSummary() {
 async function submitAIReview() {
   const cfg = loadSettings();
   if (!cfg.apiKey) {
-    showAIError('API not configured. Click "⚙️ API Settings" in the header to set your endpoint and key.');
+    showAIError('API not configured. Go to Home → API Settings to set your endpoint and key.');
     return;
   }
 
@@ -1184,7 +1032,7 @@ ${diffSummary.slice(0, 3000)}
 ${criteria || 'General review — check correctness, completeness, and safety of changes.'}`;
 
   const baseUrl  = cfg.baseUrl || 'https://api.openai.com/v1';
-  const endpoint = getProxiedUrl(baseUrl).replace(/\/$/, '') + '/chat/completions';
+  const endpoint = baseUrl.replace(/\/$/, '') + '/chat/completions';
 
   try {
     const res = await fetch(endpoint, {
@@ -1224,16 +1072,7 @@ ${criteria || 'General review — check correctness, completeness, and safety of
 
   } catch (err) {
     document.getElementById('ai-spinner').classList.remove('visible');
-    let errMsg = err.message || String(err);
-    const base = loadSettings().baseUrl || '';
-    const isProxied = getProxiedUrl(base) !== base;
-    if (isProxied && (errMsg.toLowerCase().includes('networkerror') ||
-                      errMsg.toLowerCase().includes('failed to fetch') ||
-                      errMsg === 'Load failed')) {
-      errMsg = 'Local proxy not running. Start it with: python proxy.py (or .\\start_proxy.ps1)';
-    } else {
-      errMsg = 'Network error: ' + errMsg + ' \u2014 Check that your API endpoint allows browser requests (CORS).';
-    }
+    const errMsg = 'Network error: ' + (err.message || String(err)) + ' \u2014 Check your API endpoint and CORS settings.';
     showAIError(errMsg);
   }
 }
@@ -1325,13 +1164,8 @@ function doAIReview() {
 // ═══════════════════════════════════════════════════════════════
 (function init() {
   const cfg = loadSettings();
-  updateSettingsButton(cfg);
-  // Mixed-content banner
-  if (cfg.baseUrl && location.protocol === 'https:' && cfg.baseUrl.startsWith('http://')) {
-    document.getElementById('mixed-banner').classList.add('on');
-  }
   if (!cfg.apiKey) {
-    document.getElementById('no-config-banner').classList.remove('hidden');
+    // No banner — user will see an error only when they click AI Review
   }
 })();
 </script>

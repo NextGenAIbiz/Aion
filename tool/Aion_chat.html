@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -132,60 +132,12 @@
     .input-pill-dropdown { display: none; position: absolute; bottom: calc(100% + 6px); left: 0; background: #1c1c1c; border: 1px solid var(--border); border-radius: 12px; padding: 6px; z-index: 200; box-shadow: 0 -8px 32px rgba(0,0,0,.6); min-width: 230px; }
     .input-pill-dropdown.open { display: block; }
 
-    /* ── Settings panel ──────────────────────────────────────────────────── */
-    #settings-panel {
-      position: absolute; top: 0; right: 0; bottom: 0;
-      width: 300px; background: #1a1a1a;
-      border-left: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      transform: translateX(100%); transition: transform .25s ease;
-      z-index: 300; box-shadow: -8px 0 32px rgba(0,0,0,.5);
-    }
-    #settings-panel.open { transform: translateX(0); }
-    .settings-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .settings-header h3 { font-size: 14px; font-weight: 700; }
-    .settings-body { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 22px; }
-    .setting-group { display: flex; flex-direction: column; gap: 10px; }
-    .setting-group-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--text-small); }
-    .setting-row { display: flex; flex-direction: column; gap: 6px; }
-    .setting-row-header { display: flex; justify-content: space-between; align-items: baseline; }
-    .setting-row-name { font-size: 13px; color: var(--text); font-weight: 500; }
-    .setting-row-val { font-size: 13px; color: var(--accent); font-weight: 700; min-width: 44px; text-align: right; }
-    .setting-row-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.5; }
-    .setting-row input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
-    #settings-overlay { display: none; position: absolute; inset: 0; background: rgba(0,0,0,.35); z-index: 299; }
-    #settings-overlay.open { display: block; }
-    #gear-btn { position: relative; }
-
-    /* ── Settings text inputs ────────────────────────────────────────────── */
-    .setting-text-input {
-      width: 100%; background: #252525; border: 1px solid var(--border);
-      border-radius: 8px; color: var(--text); font-size: 13px;
-      padding: 7px 10px; font-family: var(--font); outline: none;
-      transition: border-color .2s;
-    }
-    .setting-text-input:focus { border-color: var(--accent); }
-    .setting-text-input::placeholder { color: var(--text-small); }
-    .api-key-wrap { position: relative; }
-    .api-key-wrap .setting-text-input { padding-right: 36px; }
-    .api-key-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; display: flex; align-items: center; }
-    .api-key-toggle:hover { color: var(--text); }
-    .api-status { font-size: 11.5px; padding: 6px 10px; border-radius: 6px; margin-top: 2px; }
-    .api-status.ok   { background: #1a2e27; color: #4caf82; }
-    .api-status.warn { background: #2e2000; color: #f59e0b; }
-    .api-status.err  { background: #2e1a1a; color: #e06c75; }
-
     /* ── Document upload ─────────────────────────────────────────────────── */
     #doc-mode-banner { display: none; align-items: center; gap: 9px; padding: 7px 18px; background: #1a2e27; border-bottom: 1px solid #1e6b50; font-size: 12.5px; color: #4caf82; flex-shrink: 0; }
     #doc-mode-banner.on { display: flex; }
     #doc-mode-banner strong { color: var(--text); }
     #doc-mode-banner .banner-clear { margin-left: auto; background: none; border: 1px solid #1e6b50; color: #4caf82; border-radius: 6px; padding: 2px 9px; font-size: 11.5px; cursor: pointer; font-family: var(--font); }
     #doc-mode-banner .banner-clear:hover { background: #1e2e2a; }
-    /* ── Mixed-content banner ────────────────────────────────────────────── */
-    #mixed-banner { display: none; align-items: center; gap: 9px; padding: 8px 18px; background: #2e2000; border-bottom: 1px solid #7a4f00; font-size: 12.5px; color: #f59e0b; flex-shrink: 0; }
-    #mixed-banner.on { display: flex; }
-    #mixed-banner svg { flex-shrink: 0; }
-    #mixed-banner a { color: #fbbf24; }
     #doc-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
     #doc-chips:empty { display: none; margin: 0; }
     .doc-chip { display: flex; align-items: center; gap: 5px; background: #1a2e27; border: 1px solid var(--accent); border-radius: 999px; padding: 3px 10px 3px 8px; font-size: 12px; color: var(--text); max-width: 220px; }
@@ -203,7 +155,6 @@
       #sidebar { position: absolute; z-index: 100; height: 100%; }
       .suggest-grid { grid-template-columns: 1fr; }
       .input-pill-dropdown { left: auto; right: 0; }
-      #settings-panel { width: 100%; }
     }
   </style>
 </head>
@@ -230,17 +181,6 @@
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     </button>
     <span class="title" id="chat-title">New Chat</span>
-    <button class="icon-btn" id="gear-btn" title="Settings">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-      </svg>
-    </button>
-  </div>
-
-  <div id="mixed-banner">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <span><strong>Local proxy required</strong> &mdash; Your API is <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">http://</code> but this page is <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">https://</code>. API calls are auto-routed via <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">http://localhost:9443</code> &mdash; run <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">python proxy.py</code> (or <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">.\start_proxy.ps1</code>) to start it.</span>
   </div>
 
   <div id="doc-mode-banner">
@@ -286,71 +226,6 @@
     </div>
     <div class="input-hint"><kbd>Enter</kbd> send &nbsp;&middot;&nbsp; <kbd>Shift+Enter</kbd> new line</div>
   </div>
-
-  <!-- Settings overlay + panel -->
-  <div id="settings-overlay"></div>
-  <div id="settings-panel">
-    <div class="settings-header">
-      <h3>&#x2699;&#xFE0F; Settings</h3>
-      <button class="icon-btn" id="close-settings">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="settings-body">
-
-      <!-- API Connection -->
-      <div class="setting-group">
-        <div class="setting-group-label">API Connection</div>
-        <div class="setting-row">
-          <div class="setting-row-header">
-            <span class="setting-row-name">Endpoint URL</span>
-          </div>
-          <input type="text" id="api-base" class="setting-text-input"
-            placeholder="https://api.openai.com/v1"
-            autocomplete="off" spellcheck="false" />
-          <span class="setting-row-desc">OpenAI-compatible base URL (no trailing slash).</span>
-        </div>
-        <div class="setting-row">
-          <div class="setting-row-header">
-            <span class="setting-row-name">API Key</span>
-          </div>
-          <div class="api-key-wrap">
-            <input type="password" id="api-key" class="setting-text-input"
-              placeholder="sk-&#x2026;"
-              autocomplete="off" spellcheck="false" />
-            <button class="api-key-toggle" id="api-key-toggle" title="Show / hide">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-          </div>
-          <span class="setting-row-desc">Stored only in your browser&rsquo;s localStorage.</span>
-        </div>
-        <div id="api-status" class="api-status" style="display:none"></div>
-      </div>
-
-      <!-- Generation -->
-      <div class="setting-group">
-        <div class="setting-group-label">Generation</div>
-        <div class="setting-row">
-          <div class="setting-row-header">
-            <span class="setting-row-name">Temperature</span>
-            <span class="setting-row-val" id="temp-val">0.70</span>
-          </div>
-          <input type="range" id="temp" min="0" max="2" step="0.05" value="0.7" />
-          <span class="setting-row-desc">Controls randomness. Lower = more focused, higher = more creative.</span>
-        </div>
-        <div class="setting-row">
-          <div class="setting-row-header">
-            <span class="setting-row-name">Max tokens</span>
-            <span class="setting-row-val" id="tokens-val">4096</span>
-          </div>
-          <input type="range" id="tokens" min="256" max="16384" step="256" value="4096" />
-          <span class="setting-row-desc">Maximum length of the model&rsquo;s response.</span>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
 
 <div id="toast"></div>
 <input type="file" id="file-input" style="display:none"
@@ -439,10 +314,6 @@ const sugGrid     = $("suggest-grid");
 const inputEl     = $("user-input");
 const sendBtn     = $("send-btn");
 const stopBtn     = $("stop-btn");
-const tempEl      = $("temp");
-const tempValEl   = $("temp-val");
-const tokensEl    = $("tokens");
-const tokensValEl = $("tokens-val");
 const toastEl     = $("toast");
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -594,7 +465,7 @@ function addMsgDOM(role, content, reasoning, animate) {
 
 function buildSuggestions() {
   const role = ROLES[selectedRole] || ROLES.general;
-  document.querySelector("#welcome p").textContent = role.desc + " \u2014 powered by Aion.";
+  const _wp1 = document.querySelector("#welcome p"); if (_wp1) _wp1.textContent = role.desc + " \u2014 powered by Aion.";
   sugGrid.innerHTML = role.suggestions.map(s =>
     `<div class="suggest-card" data-text="${esc(s.text)}">
       <strong>${esc(s.title)}</strong>${esc(s.text.slice(0, 56))}&#x2026;
@@ -687,7 +558,8 @@ function refreshDocUI() {
   chips.querySelectorAll(".doc-chip-del").forEach(btn => {
     btn.onclick = () => removeDocument(btn.closest(".doc-chip").dataset.name);
   });
-  document.querySelector("#welcome p").textContent = names.length === 1
+  const _wp2 = document.querySelector("#welcome p");
+  if (_wp2) _wp2.textContent = names.length === 1
     ? `Ask anything about \u201C${names[0]}\u201D \u2014 Aion will answer based on the document.`
     : `Ask anything about your ${names.length} documents \u2014 Aion will answer based on them.`;
 }
@@ -714,9 +586,7 @@ async function extractDocument(file) {
 
   if (ext === 'pdf') {
     if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js failed to load \u2014 check your internet connection.');
-    // Disable the web worker so PDF.js runs in the main thread.
-    // This avoids worker CORS/CSP failures when the page is served from file:// or a restricted network.
-    pdfjsLib.GlobalWorkerOptions.workerSrc = '';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     const buf = await readFileAsArrayBuffer(file);
     let pdf;
     try {
@@ -728,7 +598,8 @@ async function extractDocument(file) {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page    = await pdf.getPage(i);
       const content = await page.getTextContent();
-      text += content.items.map(s => s.str).join(' ') + '\n';
+      // Filter to TextItem objects only (PDF.js 3.x also returns TextMarkedContent which has no .str)
+      text += content.items.filter(s => typeof s.str === 'string').map(s => s.str).join(' ') + '\n';
     }
     return text.trim();
   }
@@ -783,13 +654,15 @@ async function sendMessage() {
   if (!text || abortCtrl) return;
 
   // ── Validate API settings ─────────────────────────────────────────────────
-  const apiBase      = $("api-base").value.trim().replace(/\/+$/, "");
-  const apiKey       = $("api-key").value.trim();
-  const effectiveBase = getProxiedUrl(apiBase);   // auto-proxy on HTTPS pages
+  let apiBase = "", apiKey = "";
+  try {
+    const saved = JSON.parse(localStorage.getItem("aion_api_settings") || "{}");
+    apiBase = (saved.base || "").trim().replace(/\/+$/, "");
+    apiKey  = (saved.key  || "").trim();
+  } catch {}
   if (!apiBase || !apiKey) {
-    showToast("Please configure your API endpoint and key in \u2699\uFE0F Settings.");
-    $("settings-panel").classList.add("open");
-    $("settings-overlay").classList.add("open");
+    showToast('API not configured \u2014 redirecting to Settings\u2026');
+    setTimeout(() => { window.location.href = '../index.html#settings'; }, 800);
     return;
   }
 
@@ -886,16 +759,16 @@ async function sendMessage() {
 
   // ── API call ──────────────────────────────────────────────────────────────
   try {
-    const res = await fetch(`${effectiveBase}/chat/completions`, {
+    const res = await fetch(`${apiBase}/chat/completions`, {
       method:  "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
       body: JSON.stringify({
         model:    modelName,
         messages: [SYSTEM_PROMPT, ...session.messages.map(m => ({ role: m.role, content: m.content }))],
-        ...(cfg.no_temperature ? {} : { temperature: +tempEl.value }),
+        ...(cfg.no_temperature ? {} : { temperature: 0.7 }),
         ...(cfg.use_completion_tokens
-          ? { max_completion_tokens: +tokensEl.value }
-          : { max_tokens:            +tokensEl.value }),
+          ? { max_completion_tokens: 4096 }
+          : { max_tokens:            4096 }),
         stream: cfg.stream,
       }),
       signal: abortCtrl.signal,
@@ -938,14 +811,7 @@ async function sendMessage() {
 
   } catch (err) {
     if (err.name !== "AbortError") {
-      let msg = err.message || String(err);
-      const _base = $("api-base").value.trim();
-      const _proxied = getProxiedUrl(_base) !== _base;
-      if (_proxied && (msg.toLowerCase().includes('networkerror') ||
-                       msg.toLowerCase().includes('failed to fetch') ||
-                       msg === 'Load failed')) {
-        msg = 'Local proxy not running. Start it with: python proxy.py (or .\\start_proxy.ps1)';
-      }
+      const msg = err.message || String(err);
       showToast(msg.startsWith('HTTP') ? msg : 'Error: ' + msg);
       fullContent = fullContent || '\u26A0\uFE0F ' + msg;
     }
@@ -970,76 +836,13 @@ async function sendMessage() {
   loadSessions();
   startNewChat();
 
-  // ── API settings persistence ──────────────────────────────────────────────
-  function saveApiSettings() {
-    try {
-      localStorage.setItem("aion_api_settings", JSON.stringify({
-        base: $("api-base").value,
-        key:  $("api-key").value,
-      }));
-    } catch {}
-    updateApiStatus();
-  }
-
-  function isMixedContent(url) {
-    return location.protocol === 'https:' && url.startsWith('http://');
-  }
-
-  function getProxiedUrl(base) {
-    // Reroute http:// API calls through the local proxy when on an HTTPS page.
-    // http://localhost is always allowed by browsers from https:// pages.
-    if (!base || !isMixedContent(base)) return base;
-    try {
-      const u = new URL(base);
-      return 'http://localhost:9443' + u.pathname.replace(/\/$/, '');
-    } catch { return base; }
-  }
-
-  function updateApiStatus() {
-    const statusEl = $('api-status');
-    const base = $('api-base').value.trim();
-    const key  = $('api-key').value.trim();
-    if (!base && !key) { statusEl.style.display = 'none'; return; }
-    statusEl.style.display = 'block';
-    if (base && key && isMixedContent(base)) {
-      statusEl.className = 'api-status warn';
-      statusEl.textContent = '\u26A1 Via local proxy \u2014 keep proxy.py running while using the tools.';
-    } else if (base && key) {
-      statusEl.className = 'api-status ok';
-      statusEl.textContent = '\u2713 Endpoint and key configured';
-    } else {
-      statusEl.className = 'api-status err';
-      statusEl.textContent = base ? '\u26A0 API key is missing' : '\u26A0 Endpoint URL is missing';
-    }
-    // show/hide the persistent banner
-    const mixed = base && isMixedContent(base);
-    $('mixed-banner').classList.toggle('on', mixed);
-  }
-
-  // Load saved settings
+  // ── Load shared API settings + model ────────────────────────────────────
   try {
-    const saved = JSON.parse(localStorage.getItem("aion_api_settings") || "{}");
-    if (saved.base) $("api-base").value = saved.base;
-    if (saved.key)  $("api-key").value  = saved.key;
-  } catch {}
-  updateApiStatus();
-
-  $("api-base").addEventListener("input", saveApiSettings);
-  $("api-key").addEventListener("input",  saveApiSettings);
-
-  // Show / hide API key
-  $("api-key-toggle").onclick = () => {
-    const inp = $("api-key");
-    inp.type = inp.type === "password" ? "text" : "password";
-  };
-
-  // Auto-open settings panel on first visit (no API key saved)
-  try {
-    const saved = JSON.parse(localStorage.getItem("aion_api_settings") || "{}");
+    const saved = JSON.parse(localStorage.getItem('aion_api_settings') || '{}');
+    if (saved.model && MODELS[saved.model]) selectedModel = saved.model;
     if (!saved.key || !saved.base) setTimeout(() => {
-      $("settings-panel").classList.add("open");
-      $("settings-overlay").classList.add("open");
-    }, 300);
+      showToast('API not configured \u2014 go to Home \u2192 API Settings.');
+    }, 800);
   } catch {}
 
   // ── Sidebar ───────────────────────────────────────────────────────────────
@@ -1055,17 +858,6 @@ async function sendMessage() {
   });
   inputEl.addEventListener("input", autoResize);
 
-  // ── Settings panel ────────────────────────────────────────────────────────
-  tempEl.oninput   = () => tempValEl.textContent   = (+tempEl.value).toFixed(2);
-  tokensEl.oninput = () => tokensValEl.textContent = tokensEl.value;
-
-  const settingsPanel   = $("settings-panel");
-  const settingsOverlay = $("settings-overlay");
-  const openSettings    = () => { settingsPanel.classList.add("open"); settingsOverlay.classList.add("open"); };
-  const closeSettings   = () => { settingsPanel.classList.remove("open"); settingsOverlay.classList.remove("open"); };
-  $("gear-btn").onclick        = openSettings;
-  $("close-settings").onclick  = closeSettings;
-  settingsOverlay.onclick      = closeSettings;
 
   // ── Document upload ───────────────────────────────────────────────────────
   const fileInput = $("file-input");

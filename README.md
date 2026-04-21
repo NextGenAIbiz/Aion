@@ -101,63 +101,9 @@ Supported formats: **PDF**, **DOCX**, **XLSX / XLS**, **TXT**, **CSV**, **MD**, 
 
 1. Push the repo to GitHub
 2. Go to **Settings → Pages → Source: main / root**
-3. Run the local HTTPS proxy (see below), then in ⚙️ Settings set Endpoint URL to `https://localhost:9443/v1`
+3. Open a tool, enter your API endpoint and key in ⚙️ Settings
 
-> ⚠️ Browsers block HTTP requests from HTTPS pages (Mixed Content rule).  
-> Your API at `http://10.161.112.104:3000/v1` must be reached through an HTTPS proxy.
-
----
-
-## Fixing the Mixed Content Error (using `http://10.161.112.104:3000`)
-
-The included [`Caddyfile`](Caddyfile) + [`start_proxy.ps1`](start_proxy.ps1) run a **local HTTPS proxy on your own machine**:
-
-```
-GitHub Pages (HTTPS)
-  └─► https://localhost:9443/v1   ← Caddy (trusted local cert)
-        └─► http://10.161.112.104:3000/v1   ← your LLM server
-```
-
-### Setup (one-time, on the machine you browse from)
-
-```powershell
-# 1. Install Caddy
-winget install Caddy.Caddy
-
-# 2. Trust Caddy's local CA so your browser accepts https://localhost
-caddy trust
-
-# 3. Start the proxy (from the repo root)
-.\start_proxy.ps1
-```
-
-Or if you already have Caddy installed:
-
-```powershell
-caddy run --config Caddyfile
-```
-
-### In Aion ⚙️ Settings, set:
-
-```
-Endpoint URL:  https://localhost:9443/v1
-API Key:       <your key>
-```
-
-> The proxy must be running whenever you use the tools from GitHub Pages.  
-> For local development (`python serve.py`), you can use `http://10.161.112.104:3000/v1` directly — no proxy needed.
-
----
-
-### Alternative — ngrok tunnel (no Caddy install)
-
-```powershell
-# Install ngrok: https://ngrok.com/download
-# Run on the API server machine (10.161.112.104):
-ngrok http 3000
-```
-
-Copy the `https://xxxx.ngrok-free.app` URL as your endpoint. Free tier works fine.
+> **Note:** If your API is on `http://` and you access the tools from GitHub Pages (`https://`), browsers will block the request (Mixed Content rule). Use an `https://` endpoint, or run the tools locally with `python serve.py`.
 
 ---
 

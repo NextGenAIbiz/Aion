@@ -32,6 +32,36 @@
     .tool-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
     .tool-tag { font-size: 10.5px; font-weight: 600; background: #1f2e2a; color: var(--accent); padding: 2px 9px; border-radius: 999px; align-self: flex-start; text-transform: uppercase; letter-spacing: .4px; }
     footer { padding: 20px 40px; text-align: center; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); }
+
+    /* ── Tabs ── */
+    .tab-bar { display: flex; gap: 4px; padding: 28px 40px 0; max-width: 900px; margin: 0 auto; width: 100%; }
+    .tab-btn { background: none; border: none; color: var(--muted); font-family: var(--font); font-size: 13.5px; font-weight: 600; padding: 7px 16px; border-radius: 8px; cursor: pointer; transition: color .15s, background .15s; }
+    .tab-btn:hover { color: var(--text); background: #1f1f1f; }
+    .tab-btn.active { color: var(--text); background: #1f1f1f; border-bottom: 2px solid var(--accent); border-radius: 8px 8px 0 0; }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
+    /* ── API Settings form ── */
+    .api-form { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 28px 32px; max-width: 540px; display: flex; flex-direction: column; gap: 20px; }
+    .api-form h2 { font-size: 15px; font-weight: 700; margin: 0; }
+    .api-form p { font-size: 12.5px; color: var(--muted); line-height: 1.6; margin: 0; }
+    .field-grp { display: flex; flex-direction: column; gap: 6px; }
+    .field-grp label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+    .field-grp input { background: #111; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 13px; padding: 9px 12px; outline: none; transition: border-color .2s; }
+    .field-grp input:focus { border-color: var(--accent); }
+    .field-grp input::placeholder { color: #555; }
+    .field-grp .hint { font-size: 11px; color: var(--muted); }
+    .key-wrap { position: relative; }
+    .key-wrap input { padding-right: 38px; width: 100%; }
+    .key-toggle { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); cursor: pointer; padding: 2px; display: flex; align-items: center; }
+    .key-toggle:hover { color: var(--text); }
+    .save-row { display: flex; align-items: center; gap: 14px; }
+    .btn-save { background: var(--accent); color: #fff; border: none; border-radius: 8px; font-family: var(--font); font-size: 13px; font-weight: 600; padding: 9px 22px; cursor: pointer; transition: opacity .15s; }
+    .btn-save:hover { opacity: .85; }
+    .save-msg { font-size: 12px; color: #4caf82; display: none; }
+    .save-msg.on { display: inline; }
+    .api-configured-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 12px; border-radius: 999px; background: #1a2e27; color: #4caf82; border: 1px solid #1e6b50; }
+    .api-configured-badge.err { background: #2e1a1a; color: #e06c75; border-color: #6b1e1e; }
   </style>
 </head>
 <body>
@@ -43,24 +73,123 @@
   <p class="subtitle">AI-powered tools for embedded automotive software development.</p>
   <div class="divider"></div>
 </header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-tools-btn" onclick="showTab('tools')">&#x1F9F0; Tools</button>
+  <button class="tab-btn" id="tab-settings-btn" onclick="showTab('settings')">&#x2699;&#xFE0F; API Settings</button>
+</div>
+
 <main>
-  <div class="section-label">Available tools</div>
-  <div class="tools-grid">
-    <a class="tool-card" href="tool/Aion_chat.html">
-      <div class="tool-icon">&#x1F4AC;</div>
-      <div class="tool-name">AI Chat</div>
-      <div class="tool-desc">Chat with DeepSeek R1, GPT-OSS 120B, or GPT-5 Mini. Streaming responses with think-chain reasoning.</div>
-      <span class="tool-tag">Chat</span>
-    </a>
-    <a class="tool-card" href="tool/EEPROM_review.html">
-      <div class="tool-icon" style="background:#1a1f3a">&#x1F4C4;</div>
-      <div class="tool-name">CNT AI Reviewer</div>
-      <div class="tool-desc">Compare Base vs New .CNT (EEPROM) files, diff every parameter, then get an AI-generated review with verdict and risk rating.</div>
-      <span class="tool-tag" style="background:#1a1f3a;color:#4f8ef7">EEPROM</span>
-    </a>
-    <!-- Add new tool cards here -->
+  <!-- Tools tab -->
+  <div class="tab-pane active" id="tab-tools">
+    <div class="section-label">Available tools</div>
+    <div class="tools-grid">
+      <a class="tool-card" href="tool/Aion_chat.html">
+        <div class="tool-icon">&#x1F4AC;</div>
+        <div class="tool-name">AI Chat</div>
+        <div class="tool-desc">Chat with DeepSeek R1, GPT-OSS 120B, or GPT-5 Mini. Streaming responses with think-chain reasoning.</div>
+        <span class="tool-tag">Chat</span>
+      </a>
+      <a class="tool-card" href="tool/EEPROM_review.html">
+        <div class="tool-icon" style="background:#1a1f3a">&#x1F4C4;</div>
+        <div class="tool-name">CNT AI Reviewer</div>
+        <div class="tool-desc">Compare Base vs New .CNT (EEPROM) files, diff every parameter, then get an AI-generated review with verdict and risk rating.</div>
+        <span class="tool-tag" style="background:#1a1f3a;color:#4f8ef7">EEPROM</span>
+      </a>
+      <!-- Add new tool cards here -->
+    </div>
+  </div>
+
+  <!-- API Settings tab -->
+  <div class="tab-pane" id="tab-settings">
+    <div class="api-form">
+      <div>
+        <h2>&#x2699;&#xFE0F; API Settings</h2>
+        <p style="margin-top:6px">Shared by all Aion tools. Stored only in your browser&rsquo;s localStorage &mdash; never sent anywhere except the endpoint you configure.</p>
+      </div>
+      <div id="api-badge" class="api-configured-badge err">&#x26A0; Not configured</div>
+      <div class="field-grp">
+        <label>Model</label>
+        <select id="cfg-model" style="background:#111;border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;padding:9px 12px;outline:none;width:100%;transition:border-color .2s;">
+          <option value="deepseek">🧠 DeepSeek R1</option>
+          <option value="gptoss">✨ GPT-OSS 120B</option>
+          <option value="gpt5mini">⚡ GPT-5 Mini</option>
+        </select>
+      </div>
+      <div class="field-grp">
+        <label>Endpoint URL</label>
+        <input type="text" id="cfg-base" placeholder="http://10.161.112.104:3000/v1" autocomplete="off" spellcheck="false" />
+        <span class="hint">OpenAI-compatible base URL (no trailing slash).</span>
+      </div>
+      <div class="field-grp">
+        <label>API Key</label>
+        <div class="key-wrap">
+          <input type="password" id="cfg-key" placeholder="sk-&#x2026;" autocomplete="off" spellcheck="false" />
+          <button class="key-toggle" id="cfg-key-toggle" title="Show / hide">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="save-row">
+        <button class="btn-save" onclick="saveApiCfg()">&#x1F4BE; Save</button>
+        <span class="save-msg" id="save-msg">&#x2713; Saved</span>
+      </div>
+    </div>
   </div>
 </main>
+
 <footer>Aion &nbsp;&middot;&nbsp; Embedded Automotive AI Toolkit</footer>
+
+<script>
+  const SHARED_KEY = 'aion_api_settings';
+
+  function showTab(tab) {
+    document.getElementById('tab-tools').classList.toggle('active', tab === 'tools');
+    document.getElementById('tab-settings').classList.toggle('active', tab === 'settings');
+    document.getElementById('tab-tools-btn').classList.toggle('active', tab === 'tools');
+    document.getElementById('tab-settings-btn').classList.toggle('active', tab === 'settings');
+    history.replaceState(null, '', tab === 'settings' ? '#settings' : '#');
+  }
+
+  function saveApiCfg() {
+    const base  = document.getElementById('cfg-base').value.trim().replace(/\/+$/, '');
+    const key   = document.getElementById('cfg-key').value.trim();
+    const model = document.getElementById('cfg-model').value;
+    try { localStorage.setItem(SHARED_KEY, JSON.stringify({ base, key, model })); } catch {}
+    updateBadge(base, key);
+    const msg = document.getElementById('save-msg');
+    msg.classList.add('on');
+    setTimeout(() => msg.classList.remove('on'), 2000);
+  }
+
+  function updateBadge(base, key) {
+    const badge = document.getElementById('api-badge');
+    if (base && key) {
+      badge.className = 'api-configured-badge';
+      badge.textContent = '\u2713 Configured \u2014 ' + base;
+    } else {
+      badge.className = 'api-configured-badge err';
+      badge.textContent = '\u26A0 Not configured';
+    }
+  }
+
+  // Load on boot
+  try {
+    const saved = JSON.parse(localStorage.getItem(SHARED_KEY) || '{}');
+    if (saved.base)  document.getElementById('cfg-base').value  = saved.base;
+    if (saved.key)   document.getElementById('cfg-key').value   = saved.key;
+    if (saved.model) document.getElementById('cfg-model').value = saved.model;
+    updateBadge(saved.base || '', saved.key || '');
+  } catch {}
+
+  // Key show/hide
+  document.getElementById('cfg-key-toggle').onclick = () => {
+    const inp = document.getElementById('cfg-key');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  };
+
+  // Hash-based tab open (tools link back with ../index.html#settings)
+  if (location.hash === '#settings') showTab('settings');
+</script>
 </body>
 </html>
