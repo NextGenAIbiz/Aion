@@ -171,8 +171,9 @@
     .api-key-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; display: flex; align-items: center; }
     .api-key-toggle:hover { color: var(--text); }
     .api-status { font-size: 11.5px; padding: 6px 10px; border-radius: 6px; margin-top: 2px; }
-    .api-status.ok  { background: #1a2e27; color: #4caf82; }
-    .api-status.err { background: #2e1a1a; color: #e06c75; }
+    .api-status.ok   { background: #1a2e27; color: #4caf82; }
+    .api-status.warn { background: #2e2000; color: #f59e0b; }
+    .api-status.err  { background: #2e1a1a; color: #e06c75; }
 
     /* ── Document upload ─────────────────────────────────────────────────── */
     #doc-mode-banner { display: none; align-items: center; gap: 9px; padding: 7px 18px; background: #1a2e27; border-bottom: 1px solid #1e6b50; font-size: 12.5px; color: #4caf82; flex-shrink: 0; }
@@ -239,7 +240,7 @@
 
   <div id="mixed-banner">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <span><strong>Mixed Content blocked</strong> &mdash; Your API endpoint uses <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">http://</code> but this page is served over <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">https://</code>. Browsers block this. Fix: expose your API over HTTPS, or use this tool <a href="https://github.com/nextgenaibiz/Aion#quick-start-local" target="_blank">locally</a> (<code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">python serve.py</code>).</span>
+    <span><strong>Local proxy required</strong> &mdash; Your API is <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">http://</code> but this page is <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">https://</code>. API calls are auto-routed via <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">http://localhost:9443</code> &mdash; run <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">python proxy.py</code> (or <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">.\start_proxy.ps1</code>) to start it.</span>
   </div>
 
   <div id="doc-mode-banner">
@@ -782,8 +783,9 @@ async function sendMessage() {
   if (!text || abortCtrl) return;
 
   // ── Validate API settings ─────────────────────────────────────────────────
-  const apiBase = $("api-base").value.trim().replace(/\/+$/, "");
-  const apiKey  = $("api-key").value.trim();
+  const apiBase      = $("api-base").value.trim().replace(/\/+$/, "");
+  const apiKey       = $("api-key").value.trim();
+  const effectiveBase = getProxiedUrl(apiBase);   // auto-proxy on HTTPS pages
   if (!apiBase || !apiKey) {
     showToast("Please configure your API endpoint and key in \u2699\uFE0F Settings.");
     $("settings-panel").classList.add("open");
@@ -884,7 +886,7 @@ async function sendMessage() {
 
   // ── API call ──────────────────────────────────────────────────────────────
   try {
-    const res = await fetch(`${apiBase}/chat/completions`, {
+    const res = await fetch(`${effectiveBase}/chat/completions`, {
       method:  "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
       body: JSON.stringify({
@@ -937,11 +939,12 @@ async function sendMessage() {
   } catch (err) {
     if (err.name !== "AbortError") {
       let msg = err.message || String(err);
-      const apiBase = $("api-base").value.trim();
-      if ((msg.toLowerCase().includes('networkerror') || msg.toLowerCase().includes('failed to fetch') || msg === 'Load failed')
-          && location.protocol === 'https:' && apiBase.startsWith('http://')) {
-        msg = 'Mixed Content blocked: your API endpoint uses HTTP but this page is served over HTTPS. ' +
-              'Solution: expose your API over HTTPS, or run this tool locally (python serve.py).';
+      const _base = $("api-base").value.trim();
+      const _proxied = getProxiedUrl(_base) !== _base;
+      if (_proxied && (msg.toLowerCase().includes('networkerror') ||
+                       msg.toLowerCase().includes('failed to fetch') ||
+                       msg === 'Load failed')) {
+        msg = 'Local proxy not running. Start it with: python proxy.py (or .\\start_proxy.ps1)';
       }
       showToast(msg.startsWith('HTTP') ? msg : 'Error: ' + msg);
       fullContent = fullContent || '\u26A0\uFE0F ' + msg;
@@ -982,6 +985,16 @@ async function sendMessage() {
     return location.protocol === 'https:' && url.startsWith('http://');
   }
 
+  function getProxiedUrl(base) {
+    // Reroute http:// API calls through the local proxy when on an HTTPS page.
+    // http://localhost is always allowed by browsers from https:// pages.
+    if (!base || !isMixedContent(base)) return base;
+    try {
+      const u = new URL(base);
+      return 'http://localhost:9443' + u.pathname.replace(/\/$/, '');
+    } catch { return base; }
+  }
+
   function updateApiStatus() {
     const statusEl = $('api-status');
     const base = $('api-base').value.trim();
@@ -989,8 +1002,8 @@ async function sendMessage() {
     if (!base && !key) { statusEl.style.display = 'none'; return; }
     statusEl.style.display = 'block';
     if (base && key && isMixedContent(base)) {
-      statusEl.className = 'api-status err';
-      statusEl.textContent = '\u26A0 HTTP endpoint blocked on HTTPS pages \u2014 your API must use HTTPS (or open this page locally).';
+      statusEl.className = 'api-status warn';
+      statusEl.textContent = '\u26A1 Via local proxy \u2014 keep proxy.py running while using the tools.';
     } else if (base && key) {
       statusEl.className = 'api-status ok';
       statusEl.textContent = '\u2713 Endpoint and key configured';

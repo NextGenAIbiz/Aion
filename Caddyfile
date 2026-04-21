@@ -1,35 +1,35 @@
-# Aion — Caddy reverse proxy
-# Wraps your local HTTP LLM API in HTTPS so the browser tools work from GitHub Pages.
+# Aion — Local HTTPS reverse proxy
+# ─────────────────────────────────────────────────────────────────────────────
+# Problem: GitHub Pages is HTTPS. Your LLM API at http://10.161.112.104:3000
+#          is HTTP. Browsers block mixed-content requests — so we proxy.
 #
-# Usage (one-time setup):
-#   1. Download Caddy: https://caddyserver.com/download  (or: winget install Caddy.Caddy)
-#   2. Edit the two placeholders below.
-#   3. Run:  caddy run --config Caddyfile
+# How it works:
+#   Browser (GitHub Pages HTTPS)
+#     └─► https://localhost:9443/v1   (Caddy, trusted local cert)
+#           └─► http://10.161.112.104:3000/v1   (your LLM server)
 #
-# After that, use  https://<YOUR_SERVER_IP>/v1  as the Endpoint URL in Aion Settings.
+# Setup (run once on the machine you use to browse):
+#   1. winget install Caddy.Caddy
+#   2. caddy trust                        ← installs local CA (browser trusts it)
+#   3. caddy run --config Caddyfile       ← start proxy
+#
+# In Aion Settings, set Endpoint URL to:  https://localhost:9443/v1
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Replace with your server's hostname or IP.
-# If you have a real domain with DNS, Caddy auto-provisions a Let's Encrypt cert.
-# For a bare IP (no DNS), use a self-signed cert — see note below.
 {
-    # Uncomment to generate a self-signed cert for an IP address (no domain needed):
-    # local_certs
+    # Use Caddy's built-in local CA for localhost certs (trusted after `caddy trust`)
+    local_certs
 }
 
-:443 {
-    # ── Replace with your actual hostname or IP ───────────────────────────────
-    # Example with domain:  api.yourcompany.com
-    # Example with IP:      10.161.112.104   (requires local_certs above)
-    # tls internal    ← uncomment this line when using an IP / no real domain
+localhost:9443 {
+    tls internal
 
-    # ── Proxy all requests to your local LLM server ──────────────────────────
-    # Change the port (3000) if your API runs on a different port.
-    reverse_proxy localhost:3000 {
+    # ── Forward to your LLM API server ───────────────────────────────────────
+    reverse_proxy http://10.161.112.104:3000 {
         header_up Host {upstream_hostport}
     }
 
-    # ── CORS headers so the browser can call this from any origin ─────────────
+    # ── CORS — allow calls from any origin (GitHub Pages, local, etc.) ────────
     header {
         Access-Control-Allow-Origin  *
         Access-Control-Allow-Methods "GET, POST, OPTIONS"

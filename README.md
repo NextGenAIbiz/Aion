@@ -101,54 +101,63 @@ Supported formats: **PDF**, **DOCX**, **XLSX / XLS**, **TXT**, **CSV**, **MD**, 
 
 1. Push the repo to GitHub
 2. Go to **Settings → Pages → Source: main / root**
-3. Open a tool, enter your **HTTPS** API endpoint in ⚙️ Settings
+3. Run the local HTTPS proxy (see below), then in ⚙️ Settings set Endpoint URL to `https://localhost:9443/v1`
 
-> ⚠️ Browsers block HTTP calls from HTTPS pages (Mixed Content rule). Your API endpoint **must** use `https://` when the tools are accessed from GitHub Pages.
+> ⚠️ Browsers block HTTP requests from HTTPS pages (Mixed Content rule).  
+> Your API at `http://10.161.112.104:3000/v1` must be reached through an HTTPS proxy.
 
 ---
 
-## Fixing the Mixed Content Error
+## Fixing the Mixed Content Error (using `http://10.161.112.104:3000`)
 
-If you see _"Mixed Content blocked"_, your LLM API is on `http://` but the page is on `https://`.  
-Pick one option:
+The included [`Caddyfile`](Caddyfile) + [`start_proxy.ps1`](start_proxy.ps1) run a **local HTTPS proxy on your own machine**:
 
-### Option A — Caddy reverse proxy (recommended, runs on the API server)
+```
+GitHub Pages (HTTPS)
+  └─► https://localhost:9443/v1   ← Caddy (trusted local cert)
+        └─► http://10.161.112.104:3000/v1   ← your LLM server
+```
+
+### Setup (one-time, on the machine you browse from)
 
 ```powershell
-# 1. Install Caddy (Windows)
+# 1. Install Caddy
 winget install Caddy.Caddy
 
-# 2. Edit Caddyfile in this repo — set your server IP / hostname and LLM port
-# 3. Run Caddy from the repo root
+# 2. Trust Caddy's local CA so your browser accepts https://localhost
+caddy trust
+
+# 3. Start the proxy (from the repo root)
+.\start_proxy.ps1
+```
+
+Or if you already have Caddy installed:
+
+```powershell
 caddy run --config Caddyfile
 ```
 
-Then set your endpoint to `https://<your-server-ip>/v1` in Aion Settings.  
-The included [`Caddyfile`](Caddyfile) handles TLS, CORS, and proxying in one file.
+### In Aion ⚙️ Settings, set:
 
-> For a bare IP (no DNS domain), uncomment `tls internal` and `local_certs` in the `Caddyfile`, then install the Caddy root CA in your browser once.
+```
+Endpoint URL:  https://localhost:9443/v1
+API Key:       <your key>
+```
+
+> The proxy must be running whenever you use the tools from GitHub Pages.  
+> For local development (`python serve.py`), you can use `http://10.161.112.104:3000/v1` directly — no proxy needed.
 
 ---
 
-### Option B — ngrok tunnel (instant, no server config)
+### Alternative — ngrok tunnel (no Caddy install)
 
 ```powershell
-# Install: https://ngrok.com/download
-ngrok http 3000   # replace 3000 with your LLM server port
+# Install ngrok: https://ngrok.com/download
+# Run on the API server machine (10.161.112.104):
+ngrok http 3000
 ```
 
-Copy the `https://xxxx.ngrok-free.app` URL and use it as your endpoint.  
-Free tier is sufficient for personal use.
-
----
-
-### Option C — Run locally (no HTTPS needed)
-
-```powershell
-python serve.py   # opens http://localhost:8080
-```
-
-`http://localhost` is exempt from Mixed Content rules — everything works without HTTPS.
+Copy the `https://xxxx.ngrok-free.app` URL as your endpoint. Free tier works fine.
 
 ---
 
