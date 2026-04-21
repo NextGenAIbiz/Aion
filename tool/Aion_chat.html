@@ -926,9 +926,15 @@ async function sendMessage() {
 
   } catch (err) {
     if (err.name !== "AbortError") {
-      const msg = err.message || String(err);
-      showToast(msg.startsWith("HTTP") ? msg : "Error: " + msg);
-      fullContent = fullContent || "\u26A0\uFE0F " + (err.message || "Unknown error");
+      let msg = err.message || String(err);
+      const apiBase = $("api-base").value.trim();
+      if ((msg.toLowerCase().includes('networkerror') || msg.toLowerCase().includes('failed to fetch') || msg === 'Load failed')
+          && location.protocol === 'https:' && apiBase.startsWith('http://')) {
+        msg = 'Mixed Content blocked: your API endpoint uses HTTP but this page is served over HTTPS. ' +
+              'Solution: expose your API over HTTPS, or run this tool locally (python serve.py).';
+      }
+      showToast(msg.startsWith('HTTP') ? msg : 'Error: ' + msg);
+      fullContent = fullContent || '\u26A0\uFE0F ' + msg;
     }
   }
 
@@ -962,18 +968,25 @@ async function sendMessage() {
     updateApiStatus();
   }
 
+  function isMixedContent(url) {
+    return location.protocol === 'https:' && url.startsWith('http://');
+  }
+
   function updateApiStatus() {
-    const statusEl = $("api-status");
-    const base = $("api-base").value.trim();
-    const key  = $("api-key").value.trim();
-    if (!base && !key) { statusEl.style.display = "none"; return; }
-    statusEl.style.display = "block";
-    if (base && key) {
-      statusEl.className = "api-status ok";
-      statusEl.textContent = "\u2713 Endpoint and key configured";
+    const statusEl = $('api-status');
+    const base = $('api-base').value.trim();
+    const key  = $('api-key').value.trim();
+    if (!base && !key) { statusEl.style.display = 'none'; return; }
+    statusEl.style.display = 'block';
+    if (base && key && isMixedContent(base)) {
+      statusEl.className = 'api-status err';
+      statusEl.textContent = '\u26A0 HTTP endpoint blocked on HTTPS pages \u2014 your API must use HTTPS (or open this page locally).';
+    } else if (base && key) {
+      statusEl.className = 'api-status ok';
+      statusEl.textContent = '\u2713 Endpoint and key configured';
     } else {
-      statusEl.className = "api-status err";
-      statusEl.textContent = base ? "\u26A0 API key is missing" : "\u26A0 Endpoint URL is missing";
+      statusEl.className = 'api-status err';
+      statusEl.textContent = base ? '\u26A0 API key is missing' : '\u26A0 Endpoint URL is missing';
     }
   }
 

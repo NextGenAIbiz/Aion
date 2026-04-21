@@ -1201,7 +1201,16 @@ ${criteria || 'General review — check correctness, completeness, and safety of
 
   } catch (err) {
     document.getElementById('ai-spinner').classList.remove('visible');
-    showAIError('Network error: ' + err.message + ' — Check that your API endpoint allows browser requests (CORS).');
+    let errMsg = err.message || String(err);
+    const base = loadSettings().baseUrl || '';
+    if ((errMsg.toLowerCase().includes('networkerror') || errMsg.toLowerCase().includes('failed to fetch') || errMsg === 'Load failed')
+        && location.protocol === 'https:' && base.startsWith('http://')) {
+      errMsg = 'Mixed Content blocked: your API endpoint uses HTTP but this page is served over HTTPS. ' +
+               'Solution: expose your API over HTTPS, or run this tool locally (python serve.py).';
+    } else {
+      errMsg = 'Network error: ' + errMsg + ' \u2014 Check that your API endpoint allows browser requests (CORS).';
+    }
+    showAIError(errMsg);
   }
 }
 
