@@ -180,6 +180,11 @@
     #doc-mode-banner strong { color: var(--text); }
     #doc-mode-banner .banner-clear { margin-left: auto; background: none; border: 1px solid #1e6b50; color: #4caf82; border-radius: 6px; padding: 2px 9px; font-size: 11.5px; cursor: pointer; font-family: var(--font); }
     #doc-mode-banner .banner-clear:hover { background: #1e2e2a; }
+    /* ── Mixed-content banner ────────────────────────────────────────────── */
+    #mixed-banner { display: none; align-items: center; gap: 9px; padding: 8px 18px; background: #2e2000; border-bottom: 1px solid #7a4f00; font-size: 12.5px; color: #f59e0b; flex-shrink: 0; }
+    #mixed-banner.on { display: flex; }
+    #mixed-banner svg { flex-shrink: 0; }
+    #mixed-banner a { color: #fbbf24; }
     #doc-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
     #doc-chips:empty { display: none; margin: 0; }
     .doc-chip { display: flex; align-items: center; gap: 5px; background: #1a2e27; border: 1px solid var(--accent); border-radius: 999px; padding: 3px 10px 3px 8px; font-size: 12px; color: var(--text); max-width: 220px; }
@@ -230,6 +235,11 @@
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>
     </button>
+  </div>
+
+  <div id="mixed-banner">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span><strong>Mixed Content blocked</strong> &mdash; Your API endpoint uses <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">http://</code> but this page is served over <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">https://</code>. Browsers block this. Fix: expose your API over HTTPS, or use this tool <a href="https://github.com/nextgenaibiz/Aion#quick-start-local" target="_blank">locally</a> (<code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">python serve.py</code>).</span>
   </div>
 
   <div id="doc-mode-banner">
@@ -988,6 +998,9 @@ async function sendMessage() {
       statusEl.className = 'api-status err';
       statusEl.textContent = base ? '\u26A0 API key is missing' : '\u26A0 Endpoint URL is missing';
     }
+    // show/hide the persistent banner
+    const mixed = base && isMixedContent(base);
+    $('mixed-banner').classList.toggle('on', mixed);
   }
 
   // Load saved settings

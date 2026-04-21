@@ -140,6 +140,12 @@
     .btn-ai:disabled { opacity: .4; cursor: not-allowed; }
     #loading { display: none; font-size: 13px; color: var(--muted); }
 
+    /* ── Mixed-content banner ─────────────────────────────── */
+    #mixed-banner { display: none; align-items: center; gap: 9px; padding: 10px 40px; background: #2e2000; border-bottom: 1px solid #7a4f00; font-size: 12.5px; color: #f59e0b; }
+    #mixed-banner.on { display: flex; }
+    #mixed-banner svg { flex-shrink: 0; }
+    #mixed-banner a { color: #fbbf24; }
+
     /* ── No-config banner ── */
     .no-config-banner {
       display: none; background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.35);
@@ -340,6 +346,11 @@
   </div>
 </header>
 
+<div id="mixed-banner">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  <span><strong>Mixed Content blocked</strong> &mdash; Your API endpoint uses <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">http://</code> but this page is served over <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">https://</code>. Browsers block this. Fix: expose your API over HTTPS, or use this tool <a href="https://github.com/nextgenaibiz/Aion#quick-start-local" target="_blank">locally</a> (<code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px">python serve.py</code>).</span>
+</div>
+
 <main>
 
   <!-- ── No-config banner ── -->
@@ -505,6 +516,8 @@ function saveSettings() {
   setTimeout(() => document.getElementById('settings-status').classList.remove('visible'), 2500);
 
   updateSettingsButton(cfg);
+  const mixed = cfg.baseUrl && location.protocol === 'https:' && cfg.baseUrl.startsWith('http://');
+  document.getElementById('mixed-banner').classList.toggle('on', mixed);
   document.getElementById('no-config-banner').classList.add('hidden');
 }
 
@@ -1302,6 +1315,10 @@ function doAIReview() {
 (function init() {
   const cfg = loadSettings();
   updateSettingsButton(cfg);
+  // Mixed-content banner
+  if (cfg.baseUrl && location.protocol === 'https:' && cfg.baseUrl.startsWith('http://')) {
+    document.getElementById('mixed-banner').classList.add('on');
+  }
   if (!cfg.apiKey) {
     document.getElementById('no-config-banner').classList.remove('hidden');
   }

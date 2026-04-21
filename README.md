@@ -101,9 +101,54 @@ Supported formats: **PDF**, **DOCX**, **XLSX / XLS**, **TXT**, **CSV**, **MD**, 
 
 1. Push the repo to GitHub
 2. Go to **Settings → Pages → Source: main / root**
-3. Open a tool, enter your public HTTPS API endpoint in ⚙️ Settings
+3. Open a tool, enter your **HTTPS** API endpoint in ⚙️ Settings
 
-> ⚠️ Browsers block HTTP calls from HTTPS pages. The API endpoint must be served over HTTPS when hosting on GitHub Pages.
+> ⚠️ Browsers block HTTP calls from HTTPS pages (Mixed Content rule). Your API endpoint **must** use `https://` when the tools are accessed from GitHub Pages.
+
+---
+
+## Fixing the Mixed Content Error
+
+If you see _"Mixed Content blocked"_, your LLM API is on `http://` but the page is on `https://`.  
+Pick one option:
+
+### Option A — Caddy reverse proxy (recommended, runs on the API server)
+
+```powershell
+# 1. Install Caddy (Windows)
+winget install Caddy.Caddy
+
+# 2. Edit Caddyfile in this repo — set your server IP / hostname and LLM port
+# 3. Run Caddy from the repo root
+caddy run --config Caddyfile
+```
+
+Then set your endpoint to `https://<your-server-ip>/v1` in Aion Settings.  
+The included [`Caddyfile`](Caddyfile) handles TLS, CORS, and proxying in one file.
+
+> For a bare IP (no DNS domain), uncomment `tls internal` and `local_certs` in the `Caddyfile`, then install the Caddy root CA in your browser once.
+
+---
+
+### Option B — ngrok tunnel (instant, no server config)
+
+```powershell
+# Install: https://ngrok.com/download
+ngrok http 3000   # replace 3000 with your LLM server port
+```
+
+Copy the `https://xxxx.ngrok-free.app` URL and use it as your endpoint.  
+Free tier is sufficient for personal use.
+
+---
+
+### Option C — Run locally (no HTTPS needed)
+
+```powershell
+python serve.py   # opens http://localhost:8080
+```
+
+`http://localhost` is exempt from Mixed Content rules — everything works without HTTPS.
 
 ---
 

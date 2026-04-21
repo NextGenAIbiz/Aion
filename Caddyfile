@@ -1,0 +1,41 @@
+# Aion — Caddy reverse proxy
+# Wraps your local HTTP LLM API in HTTPS so the browser tools work from GitHub Pages.
+#
+# Usage (one-time setup):
+#   1. Download Caddy: https://caddyserver.com/download  (or: winget install Caddy.Caddy)
+#   2. Edit the two placeholders below.
+#   3. Run:  caddy run --config Caddyfile
+#
+# After that, use  https://<YOUR_SERVER_IP>/v1  as the Endpoint URL in Aion Settings.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Replace with your server's hostname or IP.
+# If you have a real domain with DNS, Caddy auto-provisions a Let's Encrypt cert.
+# For a bare IP (no DNS), use a self-signed cert — see note below.
+{
+    # Uncomment to generate a self-signed cert for an IP address (no domain needed):
+    # local_certs
+}
+
+:443 {
+    # ── Replace with your actual hostname or IP ───────────────────────────────
+    # Example with domain:  api.yourcompany.com
+    # Example with IP:      10.161.112.104   (requires local_certs above)
+    # tls internal    ← uncomment this line when using an IP / no real domain
+
+    # ── Proxy all requests to your local LLM server ──────────────────────────
+    # Change the port (3000) if your API runs on a different port.
+    reverse_proxy localhost:3000 {
+        header_up Host {upstream_hostport}
+    }
+
+    # ── CORS headers so the browser can call this from any origin ─────────────
+    header {
+        Access-Control-Allow-Origin  *
+        Access-Control-Allow-Methods "GET, POST, OPTIONS"
+        Access-Control-Allow-Headers "Content-Type, Authorization"
+    }
+
+    @options method OPTIONS
+    respond @options 204
+}
